@@ -153,4 +153,5 @@ ChatCommandHandlerStrategy::ChatCommandHandlerStrategy(PlayerbotAI* botAI) : Pas
     supported.push_back("guild leave");
     supported.push_back("rtsc");
     supported.push_back("drink");
+    supported.push_back("calc");
 }
