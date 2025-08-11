@@ -105,8 +105,8 @@ public:
             if (sPlayerbotAIConfig->enabled)
             {
                 ChatHandler(player->GetSession()).SendSysMessage(
-                    "|cff00ff00This server runs with |cff00ccffmod-playerbots|r "
-                    "|cffcccccchttps://github.com/liyunfan1223/mod-playerbots|r");
+                    "|cff00ff00This is a Progressive Server by |cff00ccffDecrypteD|r|cff00ff00This is a Progressive Server by |cff00ccffDecrypteD|r "
+                    "|cffcccccchttps://github.com/batolata|r");
             }
 
             /*if (sPlayerbotAIConfig->enabled || sPlayerbotAIConfig->randomBotAutologin)
@@ -116,7 +116,7 @@ public:
                 roundedTime = roundedTime.substr(0, roundedTime.find('.') + 2);
 
                 ChatHandler(player->GetSession()).SendSysMessage(
-                    "|cff00ff00Playerbots:|r bot initialization at server startup takes about '" 
+                    "|cff00ff00GWServer:|r modules initialization at server startup takes about '" 
                     + roundedTime + "' minutes.");
             }*/
         }
@@ -292,7 +292,7 @@ public:
         LOG_INFO("server.loading", "║     mod-playerbots is a community-driven open-source     ║");
         LOG_INFO("server.loading", "║  project based on AzerothCore, licensed under AGPLv3.0   ║");
         LOG_INFO("server.loading", "╟──────────────────────────────────────────────────────────╢");
-        LOG_INFO("server.loading", "║      https://github.com/liyunfan1223/mod-playerbots      ║");
+        LOG_INFO("server.loading", "║      https://github.com/batolata/mod-playerbots          ║");
         LOG_INFO("server.loading", "╚══════════════════════════════════════════════════════════╝");
 
         uint32 oldMSTime = getMSTime();
