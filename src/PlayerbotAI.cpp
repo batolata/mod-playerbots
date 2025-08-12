@@ -57,6 +57,7 @@
 #include "Unit.h"
 #include "UpdateTime.h"
 #include "Vehicle.h"
+#include "BotMovementUtils.h"
 
 const int SPELL_TITAN_GRIP = 49152;
 
@@ -720,6 +721,7 @@ void PlayerbotAI::HandleTeleportAck()
             bot->GetSession()->HandleMoveWorldportAck();
         }
         // SetNextCheckDelay(urand(2000, 5000));
+		SetNextCheckDelay(urand(500, 1500)); // short delay to break bursts without hindering gameplay
         if (sPlayerbotAIConfig->applyInstanceStrategies)
             ApplyInstanceStrategies(bot->GetMapId(), true);
         EvaluateHealerDpsStrategy();
@@ -2373,7 +2375,7 @@ std::string PlayerbotAI::GetLocalizedGameObjectName(uint32 entry)
     return name;
 }
 
-std::vector<Player*> PlayerbotAI::GetPlayersInGroup()
+/*std::vector<Player*> PlayerbotAI::GetPlayersInGroup()
 {
     std::vector<Player*> members;
 
@@ -2390,6 +2392,34 @@ std::vector<Player*> PlayerbotAI::GetPlayersInGroup()
             continue;
 
         members.push_back(ref->GetSource());
+    }
+
+    return members;
+}*/
+
+std::vector<Player*> PlayerbotAI::GetPlayersInGroup()
+{
+    std::vector<Player*> members;
+
+    Group* group = bot->GetGroup();
+    if (!group)
+        return members;
+
+    for (GroupReference* ref = group->GetFirstMember(); ref; ref = ref->next())
+    {
+        Player* member = ref->GetSource();
+        if (!member)
+            continue;
+
+        // Celaning, we don't call 2 times GET_PLAYERBOT_AI and never reference it if nil
+        if (auto* ai = GET_PLAYERBOT_AI(member))
+        {
+            // If it's a bot (not real player) => we ignor it
+            if (!ai->IsRealPlayer())
+                continue;
+        }
+
+        members.push_back(member);
     }
 
     return members;
@@ -6297,11 +6327,27 @@ void PlayerbotAI::PetFollow()
     if (!pet)
         return;
     pet->AttackStop();
-    pet->InterruptNonMeleeSpells(false);
+    /* pet->InterruptNonMeleeSpells(false);
     pet->ClearInPetCombat();
     pet->GetMotionMaster()->MoveFollow(bot, PET_FOLLOW_DIST, pet->GetFollowAngle());
     if (pet->ToPet())
+        pet->ToPet()->ClearCastWhenWillAvailable();*/
+	// [Fix: MoveSplineInitArgs::Validate: expression 'velocity > 0.01f' failed for GUID Full:]
+	pet->InterruptNonMeleeSpells(false);
+    pet->ClearInPetCombat();
+
+    if (CanStartMoveSpline(pet))
+    {
+        pet->GetMotionMaster()->MoveFollow(bot, PET_FOLLOW_DIST, pet->GetFollowAngle());
+    }
+    else
+    {
+        pet->StopMovingOnCurrentPos();  // on n’envoie pas d’ordre invalide
+    }
+
+    if (pet->ToPet())
         pet->ToPet()->ClearCastWhenWillAvailable();
+	//End Fix
     CharmInfo* charmInfo = pet->GetCharmInfo();
     if (!charmInfo)
         return;
