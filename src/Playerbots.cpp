@@ -104,8 +104,8 @@ public:
             if (sPlayerbotAIConfig->enabled)
             {
                 ChatHandler(player->GetSession()).SendSysMessage(
-                    "|cff00ff00This is a Progressive Server by |cff00ccffDecrypteD|r|cff00ff00This is a Progressive Server by |cff00ccffDecrypteD|r "
-                    "|cffcccccchttps://github.com/batolata|r");
+                    "|cff00ff00This server runs with |cff00ccffmod-playerbots|r "
+                    "|cffcccccchttps://github.com/liyunfan1223/mod-playerbots|r");
             }
 
             if (sPlayerbotAIConfig->enabled || sPlayerbotAIConfig->randomBotAutologin)
@@ -115,7 +115,7 @@ public:
                 roundedTime = roundedTime.substr(0, roundedTime.find('.') + 2);
 
                 ChatHandler(player->GetSession()).SendSysMessage(
-                    "|cff00ff00GWServer:|r modules initialization at server startup takes about '" 
+                    "|cff00ff00Playerbots:|r bot initialization at server startup takes about '"
                     + roundedTime + "' minutes.");
             }
         }
@@ -217,16 +217,20 @@ public:
         if (!player->GetSession()->IsBot() || !sRandomPlayerbotMgr->IsRandomBot(player))
             return;
 
-        // no XP multiplier, when bot has group where leader is a real player.
+        // no XP multiplier, when bot is in a group with a real player.
         if (Group* group = player->GetGroup())
         {
-            Player* leader = group->GetLeader();
-            if (leader && leader != player)
+            for (GroupReference* gref = group->GetFirstMember(); gref; gref = gref->next())
             {
-                if (PlayerbotAI* leaderBotAI = GET_PLAYERBOT_AI(leader))
+                Player* member = gref->GetSource();
+                if (!member)
                 {
-                    if (leaderBotAI->HasRealPlayerMaster())
-                        return;
+                    continue;
+                }
+
+                if (!member->GetSession()->IsBot())
+                {
+                    return;
                 }
             }
         }
@@ -291,11 +295,11 @@ public:
         LOG_INFO("server.loading", "║     mod-playerbots is a community-driven open-source     ║");
         LOG_INFO("server.loading", "║  project based on AzerothCore, licensed under AGPLv3.0   ║");
         LOG_INFO("server.loading", "╟──────────────────────────────────────────────────────────╢");
-        LOG_INFO("server.loading", "║      https://github.com/batolata/mod-playerbots          ║");
+        LOG_INFO("server.loading", "║      https://github.com/liyunfan1223/mod-playerbots      ║");
         LOG_INFO("server.loading", "╚══════════════════════════════════════════════════════════╝");
 
         uint32 oldMSTime = getMSTime();
-        
+
         LOG_INFO("server.loading", " ");
         LOG_INFO("server.loading", "Load Playerbots Config...");
 
