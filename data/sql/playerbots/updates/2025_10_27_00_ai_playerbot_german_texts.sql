@@ -1,5 +1,3 @@
-UPDATE `ai_playerbot_texts` SET `text_loc3`='';
-
 UPDATE `ai_playerbot_texts` SET `text_loc3`='am Arsch der Welt' WHERE `id`=1;
 UPDATE `ai_playerbot_texts` SET `text_loc3`='an einem geheimen Ort' WHERE `id`=2;
 UPDATE `ai_playerbot_texts` SET `text_loc3`='irgendwo' WHERE `id`=3;
