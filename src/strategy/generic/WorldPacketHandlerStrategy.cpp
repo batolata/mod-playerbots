@@ -5,8 +5,6 @@
 
 #include "WorldPacketHandlerStrategy.h"
 
-#include "Playerbots.h"
-
 void WorldPacketHandlerStrategy::InitTriggers(std::vector<TriggerNode*>& triggers)
 {
     PassTroughStrategy::InitTriggers(triggers);
@@ -60,6 +58,7 @@ void WorldPacketHandlerStrategy::InitTriggers(std::vector<TriggerNode*>& trigger
     // relevance), nullptr)));
     triggers.push_back(new TriggerNode("group list", NextAction::array(0, new NextAction("reset botAI", relevance), nullptr)));
     triggers.push_back(new TriggerNode("see spell", NextAction::array(0, new NextAction("see spell", relevance), nullptr)));
+
     triggers.push_back(new TriggerNode("release spirit", NextAction::array(0, new NextAction("release", relevance), nullptr)));
     triggers.push_back(new TriggerNode("revive from corpse", NextAction::array(0, new NextAction("revive from corpse", relevance), nullptr)));
     triggers.push_back(new TriggerNode("master loot roll", NextAction::array(0, new NextAction("master loot roll", relevance), nullptr)));
@@ -69,7 +68,7 @@ void WorldPacketHandlerStrategy::InitTriggers(std::vector<TriggerNode*>& trigger
     triggers.push_back(new TriggerNode("questgiver quest details", NextAction::array(0, new NextAction("turn in query quest", relevance), nullptr)));
 
     // loot roll
-    triggers.push_back(new TriggerNode("very often", NextAction::array(0, new NextAction("loot roll", 10.0f), nullptr)));
+    triggers.push_back(new TriggerNode("very often", NextAction::array(0, new NextAction("loot roll", relevance), nullptr)));
 }
 
 WorldPacketHandlerStrategy::WorldPacketHandlerStrategy(PlayerbotAI* botAI) : PassTroughStrategy(botAI)
