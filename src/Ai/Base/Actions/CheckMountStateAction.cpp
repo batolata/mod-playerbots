@@ -55,63 +55,6 @@ MountData CollectMountData(const Player* bot)
     return data;
 }
 
-bool CheckMountStateAction::isUseful()
-{
-    // Not useful when:
-    if (botAI->IsInVehicle() || bot->isDead() || bot->HasUnitState(UNIT_STATE_IN_FLIGHT) ||
-        !bot->IsOutdoors() || bot->InArena())
-        return false;
-
-    master = GetMaster();
-
-    // Get shapeshift states, only applicable when there's a master
-    if (master)
-    {
-        botInShapeshiftForm = bot->GetShapeshiftForm();
-        masterInShapeshiftForm = master->GetShapeshiftForm();
-    }
-
-    // Not useful when in combat and not currently mounted / travel formed
-    if ((bot->IsInCombat() || botAI->GetState() == BOT_STATE_COMBAT) &&
-        !bot->IsMounted() && botInShapeshiftForm != FORM_TRAVEL && botInShapeshiftForm != FORM_FLIGHT && botInShapeshiftForm != FORM_FLIGHT_EPIC)
-        return false;
-
-    // In addition to checking IsOutdoors, also check whether bot is clipping below floor slightly because that will
-    // cause bot to falsly indicate they are outdoors. This fixes bug where bot tries to mount indoors (which seems
-    // to mostly be an issue in tunnels of WSG and AV)
-    float posZ = bot->GetPositionZ();
-    float groundLevel = bot->GetMapWaterOrGroundLevel(bot->GetPositionX(), bot->GetPositionY(), posZ);
-    if (!bot->IsMounted() && !bot->HasWaterWalkAura() && posZ < groundLevel)
-        return false;
-
-    // Not useful when bot does not have mount strat and is not currently mounted
-    if (!GET_PLAYERBOT_AI(bot)->HasStrategy("mount", BOT_STATE_NON_COMBAT) && !bot->IsMounted())
-        return false;
-
-    // Not useful when level lower than minimum required
-    if (bot->GetLevel() < sPlayerbotAIConfig->useGroundMountAtMinLevel)
-        return false;
-
-    // Allow mounting while transformed only if the form allows it
-    if (bot->HasAuraType(SPELL_AURA_TRANSFORM) && bot->IsInDisallowedMountForm())
-        return false;
-
-    // BG Logic
-    if (bot->InBattleground())
-    {
-        // Do not use when carrying BG Flags
-        if (bot->HasAura(BG_WS_SPELL_WARSONG_FLAG) || bot->HasAura(BG_WS_SPELL_SILVERWING_FLAG) || bot->HasAura(BG_EY_NETHERSTORM_FLAG_SPELL))
-            return false;
-
-        // Only mount if BG starts in less than 30 sec
-        if (Battleground* bg = bot->GetBattleground())
-            if (bg->GetStatus() == STATUS_WAIT_JOIN && bg->GetStartDelayTime() > BG_START_DELAY_30S)
-                return false;
-    }
-
-    return true;
-}
-
 bool CheckMountStateAction::Execute(Event /*event*/)
 {
     // Determine if there are no attackers
@@ -180,6 +123,63 @@ bool CheckMountStateAction::Execute(Event /*event*/)
     }
 
     return false;
+}
+
+bool CheckMountStateAction::isUseful()
+{
+    // Not useful when:
+    if (botAI->IsInVehicle() || bot->isDead() || bot->HasUnitState(UNIT_STATE_IN_FLIGHT) ||
+        !bot->IsOutdoors() || bot->InArena())
+        return false;
+
+    master = GetMaster();
+
+    // Get shapeshift states, only applicable when there's a master
+    if (master)
+    {
+        botInShapeshiftForm = bot->GetShapeshiftForm();
+        masterInShapeshiftForm = master->GetShapeshiftForm();
+    }
+
+    // Not useful when in combat and not currently mounted / travel formed
+    if ((bot->IsInCombat() || botAI->GetState() == BOT_STATE_COMBAT) &&
+        !bot->IsMounted() && botInShapeshiftForm != FORM_TRAVEL && botInShapeshiftForm != FORM_FLIGHT && botInShapeshiftForm != FORM_FLIGHT_EPIC)
+        return false;
+
+    // In addition to checking IsOutdoors, also check whether bot is clipping below floor slightly because that will
+    // cause bot to falsly indicate they are outdoors. This fixes bug where bot tries to mount indoors (which seems
+    // to mostly be an issue in tunnels of WSG and AV)
+    float posZ = bot->GetPositionZ();
+    float groundLevel = bot->GetMapWaterOrGroundLevel(bot->GetPositionX(), bot->GetPositionY(), posZ);
+    if (!bot->IsMounted() && !bot->HasWaterWalkAura() && posZ < groundLevel)
+        return false;
+
+    // Not useful when bot does not have mount strat and is not currently mounted
+    if (!GET_PLAYERBOT_AI(bot)->HasStrategy("mount", BOT_STATE_NON_COMBAT) && !bot->IsMounted())
+        return false;
+
+    // Not useful when level lower than minimum required
+    if (bot->GetLevel() < sPlayerbotAIConfig.useGroundMountAtMinLevel)
+        return false;
+
+    // Allow mounting while transformed only if the form allows it
+    if (bot->HasAuraType(SPELL_AURA_TRANSFORM) && bot->IsInDisallowedMountForm())
+        return false;
+
+    // BG Logic
+    if (bot->InBattleground())
+    {
+        // Do not use when carrying BG Flags
+        if (bot->HasAura(BG_WS_SPELL_WARSONG_FLAG) || bot->HasAura(BG_WS_SPELL_SILVERWING_FLAG) || bot->HasAura(BG_EY_NETHERSTORM_FLAG_SPELL))
+            return false;
+
+        // Only mount if BG starts in less than 30 sec
+        if (Battleground* bg = bot->GetBattleground())
+            if (bg->GetStatus() == STATUS_WAIT_JOIN && bg->GetStartDelayTime() > BG_START_DELAY_30S)
+                return false;
+    }
+
+    return true;
 }
 
 bool CheckMountStateAction::Mount()
@@ -402,7 +402,7 @@ float CheckMountStateAction::CalculateDismountDistance() const
     // Warrior bots should dismount far enough to charge (because it's important for generating some initial rage),
     // a real player would be riding toward enemy mashing the charge key but the bots won't cast charge while mounted.
     bool isMelee = PlayerbotAI::IsMelee(bot);
-    float dismountDistance = isMelee ? sPlayerbotAIConfig->meleeDistance + 2.0f : sPlayerbotAIConfig->spellDistance + 2.0f;
+    float dismountDistance = isMelee ? sPlayerbotAIConfig.meleeDistance + 2.0f : sPlayerbotAIConfig.spellDistance + 2.0f;
     return bot->getClass() == CLASS_WARRIOR ? std::max(18.0f, dismountDistance) : dismountDistance;
 }
 
@@ -413,7 +413,7 @@ float CheckMountStateAction::CalculateMountDistance() const
     // seconds:
     // 21 / 7  =  21 / 14 + 1.5  =  3   (7 = dismounted speed  14 = epic-mount speed  1.5 = mount-spell cast time)
     bool isMelee = PlayerbotAI::IsMelee(bot);
-    float baseDistance = isMelee ? sPlayerbotAIConfig->meleeDistance + 10.0f : sPlayerbotAIConfig->spellDistance + 10.0f;
+    float baseDistance = isMelee ? sPlayerbotAIConfig.meleeDistance + 10.0f : sPlayerbotAIConfig.spellDistance + 10.0f;
     return std::max(21.0f, baseDistance);
 }
 
@@ -440,7 +440,7 @@ int32 CheckMountStateAction::CalculateMasterMountSpeed(Player* master, const Mou
     int32 ridingSkill = bot->GetPureSkillValue(SKILL_RIDING);
     int32 botLevel = bot->GetLevel();
 
-    if (ridingSkill <= 75 && botLevel < static_cast<int32>(sPlayerbotAIConfig->useFastGroundMountAtMinLevel))
+    if (ridingSkill <= 75 && botLevel < static_cast<int32>(sPlayerbotAIConfig.useFastGroundMountAtMinLevel))
         return 59;
 
     // If there is a master and bot not in BG, use master's aura effects.

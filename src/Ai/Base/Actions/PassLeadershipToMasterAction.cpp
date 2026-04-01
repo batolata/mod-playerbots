@@ -7,21 +7,20 @@
 
 #include "Event.h"
 #include "PlayerbotOperations.h"
-#include "Playerbots.h"
 #include "PlayerbotWorldThreadProcessor.h"
 
-bool PassLeadershipToMasterAction::Execute(Event event)
+bool PassLeadershipToMasterAction::Execute(Event /*event*/)
 {
     if (Player* master = GetMaster())
         if (master && master != bot && bot->GetGroup() && bot->GetGroup()->IsMember(master->GetGUID()))
         {
             auto setLeaderOp = std::make_unique<GroupSetLeaderOperation>(bot->GetGUID(), master->GetGUID());
-            sPlayerbotWorldProcessor->QueueOperation(std::move(setLeaderOp));
+            PlayerbotWorldThreadProcessor::instance().QueueOperation(std::move(setLeaderOp));
 
             if (!message.empty())
                 botAI->TellMasterNoFacing(message);
 
-            if (sRandomPlayerbotMgr->IsRandomBot(bot))
+            if (sRandomPlayerbotMgr.IsRandomBot(bot))
             {
                 botAI->ResetStrategies();
                 botAI->Reset();

@@ -1,4 +1,3 @@
-// RaidOnyxiaActions.cpp
 #include "RaidOnyxiaActions.h"
 
 #include "GenericSpellActions.h"
@@ -7,7 +6,7 @@
 #include "Playerbots.h"
 #include "PositionAction.h"
 
-bool RaidOnyxiaMoveToSideAction::Execute(Event event)
+bool RaidOnyxiaMoveToSideAction::Execute(Event /*event*/)
 {
     Unit* boss = AI_VALUE2(Unit*, "find target", "onyxia");
     if (!boss)
@@ -38,29 +37,40 @@ bool RaidOnyxiaMoveToSideAction::Execute(Event event)
     return false;
 }
 
-bool RaidOnyxiaSpreadOutAction::Execute(Event event)
+bool RaidOnyxiaSpreadOutAction::Execute(Event /*event*/)
 {
     Unit* boss = AI_VALUE2(Unit*, "find target", "onyxia");
 
     if (!boss)
         return false;
 
-    Player* target = boss->GetCurrentSpell(CURRENT_GENERIC_SPELL)->m_targets.GetUnitTarget()->ToPlayer();
-    if (target != bot)
+    // Trigger may fire on one tick, but the action can execute on a later tick.
+    // By that time the cast may have finished, so current spell can be null.
+    Spell* currentSpell = boss->GetCurrentSpell(CURRENT_GENERIC_SPELL);
+    if (!currentSpell || !currentSpell->m_spellInfo)
+        return false;
+
+    // Fireball
+    if (currentSpell->m_spellInfo->Id != 18392)
+        return false;
+
+    Unit* unitTarget = currentSpell->m_targets.GetUnitTarget();
+    Player* target = unitTarget ? unitTarget->ToPlayer() : nullptr;
+    if (!target || target != bot)
         return false;
 
     // bot->Yell("Spreading out — I'm the Fireball target!", LANG_UNIVERSAL);
     return MoveFromGroup(9.0f);  // move 9 yards
 }
 
-bool RaidOnyxiaMoveToSafeZoneAction::Execute(Event event)
+bool RaidOnyxiaMoveToSafeZoneAction::Execute(Event /*event*/)
 {
     Unit* boss = AI_VALUE2(Unit*, "find target", "onyxia");
     if (!boss)
         return false;
 
     Spell* currentSpell = boss->GetCurrentSpell(CURRENT_GENERIC_SPELL);
-    if (!currentSpell)
+    if (!currentSpell || !currentSpell->m_spellInfo)
         return false;
 
     uint32 spellId = currentSpell->m_spellInfo->Id;
@@ -94,7 +104,7 @@ bool RaidOnyxiaMoveToSafeZoneAction::Execute(Event event)
                   false, false, false, false, MovementPriority::MOVEMENT_COMBAT);
 }
 
-bool RaidOnyxiaKillWhelpsAction::Execute(Event event)
+bool RaidOnyxiaKillWhelpsAction::Execute(Event /*event*/)
 {
     Unit* currentTarget = AI_VALUE(Unit*, "current target");
     // If already attacking a whelp, don't swap targets
@@ -118,7 +128,7 @@ bool RaidOnyxiaKillWhelpsAction::Execute(Event event)
     return false;
 }
 
-bool OnyxiaAvoidEggsAction::Execute(Event event)
+bool OnyxiaAvoidEggsAction::Execute(Event /*event*/)
 {
     Position botPos = Position(bot->GetPositionX(), bot->GetPositionY(), bot->GetPositionZ());
 

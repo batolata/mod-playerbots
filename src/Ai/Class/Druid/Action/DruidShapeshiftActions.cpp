@@ -7,20 +7,19 @@
 
 #include "Playerbots.h"
 
-bool CastBearFormAction::isPossible()
-{
-    return CastBuffSpellAction::isPossible() && !botAI->HasAura("dire bear form", GetTarget());
-}
-
 bool CastBearFormAction::isUseful()
 {
     return CastBuffSpellAction::isUseful() && !botAI->HasAura("dire bear form", GetTarget());
 }
 
+bool CastBearFormAction::isPossible()
+{
+    return CastBuffSpellAction::isPossible() && !botAI->HasAura("dire bear form", GetTarget());
+}
+
 std::vector<NextAction> CastDireBearFormAction::getAlternatives()
 {
-    return NextAction::merge({ NextAction("bear form") },
-                             CastSpellAction::getAlternatives());
+    return NextAction::merge({NextAction("bear form")}, CastSpellAction::getAlternatives());
 }
 
 bool CastTravelFormAction::isUseful()
@@ -32,29 +31,26 @@ bool CastTravelFormAction::isUseful()
            !botAI->HasAura("dash", bot);
 }
 
-bool CastCasterFormAction::isUseful()
-{
-    return botAI->HasAnyAuraOf(GetTarget(), "dire bear form", "bear form", "cat form", "travel form", "aquatic form",
-                               "flight form", "swift flight form", "moonkin form", nullptr) &&
-           AI_VALUE2(uint8, "mana", "self target") > sPlayerbotAIConfig->mediumHealth;
-}
-
-bool CastCasterFormAction::Execute(Event event)
+bool CastCasterFormAction::Execute(Event /*event*/)
 {
     botAI->RemoveShapeshift();
     return true;
 }
 
-bool CastCancelTreeFormAction::isUseful()
+bool CastCasterFormAction::isUseful()
 {
-    return botAI->HasAura(33891, bot);
+    return botAI->HasAnyAuraOf(GetTarget(), "dire bear form", "bear form", "cat form", "travel form", "aquatic form",
+                               "flight form", "swift flight form", "moonkin form", nullptr) &&
+           AI_VALUE2(uint8, "mana", "self target") > sPlayerbotAIConfig.mediumHealth;
 }
 
-bool CastCancelTreeFormAction::Execute(Event event)
+bool CastCancelDruidAction::Execute(Event /*event*/)
 {
-    botAI->RemoveAura("tree of life");
+    botAI->RemoveAura(auraName);
     return true;
 }
+
+bool CastCancelDruidAction::isUseful() { return botAI->HasAura(auraId, bot); }
 
 bool CastTreeFormAction::isUseful()
 {

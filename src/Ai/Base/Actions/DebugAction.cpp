@@ -7,7 +7,11 @@
 
 #include "ChooseTravelTargetAction.h"
 #include "MapMgr.h"
-#include "Playerbots.h"
+#include "TravelMgr.h"
+#include "Player.h"
+#include "PlayerbotAI.h"
+#include "SpellMgr.h"
+#include "Spell.h"
 
 bool DebugAction::Execute(Event event)
 {
@@ -19,7 +23,7 @@ bool DebugAction::Execute(Event event)
 
     if (text == "scan")
     {
-        sPlayerbotAIConfig->openLog("scan.csv", "w");
+        sPlayerbotAIConfig.openLog("scan.csv", "w");
 
         uint32 i = 0;
         for (auto p : WorldPosition().getCreaturesNear())
@@ -28,23 +32,23 @@ bool DebugAction::Execute(Event event)
 
             uint32 areaId = 0;
             uint32 zoneId = 0;
-            sMapMgr->GetZoneAndAreaId(PHASEMASK_NORMAL, zoneId, areaId, pos.getMapId(), pos.getX(), pos.getY(),
-                                      pos.getZ());
+            sMapMgr->GetZoneAndAreaId(PHASEMASK_NORMAL, zoneId, areaId, pos.GetMapId(), pos.GetPositionX(), pos.GetPositionY(),
+                                      pos.GetPositionZ());
 
             std::ostringstream out;
             out << zoneId << "," << areaId << "," << (pos.getAreaName().empty() ? "none" : pos.getAreaName()) << ",";
 
             pos.printWKT(out);
 
-            sPlayerbotAIConfig->log("scan.csv", out.str().c_str());
+            sPlayerbotAIConfig.log("scan.csv", out.str().c_str());
 
             if (zoneId == 0 && areaId == 0)
             {
-                sPlayerbotAIConfig->log("x", out.str().c_str());
+                sPlayerbotAIConfig.log("x", out.str().c_str());
             }
             else
             {
-                sPlayerbotAIConfig->log("y", out.str().c_str());
+                sPlayerbotAIConfig.log("y", out.str().c_str());
             }
 
             i = zoneId;
@@ -53,8 +57,8 @@ bool DebugAction::Execute(Event event)
     }
     else if (text.find("printmap") != std::string::npos)
     {
-        sTravelNodeMap->printMap();
-        sTravelNodeMap->printNodeStore();
+        TravelNodeMap::instance().printMap();
+        TravelNodeMap::instance().printNodeStore();
         return true;
     }
     else if (text.find("travel ") != std::string::npos)
@@ -72,7 +76,7 @@ bool DebugAction::Execute(Event event)
                 return false;
 
             std::vector<WorldPosition> beginPath, endPath;
-            TravelNodeRoute route = sTravelNodeMap->getRoute(botPos, *points.front(), beginPath, bot);
+            TravelNodeRoute route = TravelNodeMap::instance().getRoute(botPos, *points.front(), beginPath, bot);
 
             std::ostringstream out;
             out << "Traveling to " << dest->getTitle() << ": ";
@@ -108,7 +112,7 @@ bool DebugAction::Execute(Event event)
 
         out << quest->GetTitle() << ": ";
 
-        QuestContainer* cont = sTravelMgr->quests[questId];
+        QuestContainer* cont = TravelMgr::instance().quests[questId];
 
         for (auto g : cont->questGivers)
         {
@@ -135,11 +139,11 @@ bool DebugAction::Execute(Event event)
     else if (text.find("quest") != std::string::npos)
     {
         std::ostringstream out;
-        out << sTravelMgr->quests.size() << " quests ";
+        out << TravelMgr::instance().quests.size() << " quests ";
 
         uint32 noT = 0, noG = 0, noO = 0;
 
-        for (auto q : sTravelMgr->quests)
+        for (auto q : TravelMgr::instance().quests)
         {
             if (q.second->questGivers.empty())
                 noG++;
@@ -164,7 +168,7 @@ bool DebugAction::Execute(Event event)
 
         // uint32 noT = 0, noG = 0, noO = 0; //not used, line marked for removal.
 
-        for (auto q : sTravelMgr->quests)
+        for (auto q : TravelMgr::instance().quests)
         {
             Quest const* quest = sObjectMgr->GetQuestTemplate(q.first);
 
@@ -194,16 +198,16 @@ bool DebugAction::Execute(Event event)
 
         std::string const name = "USER:" + text.substr(9);
 
-        /* TravelNode* startNode  = */ sTravelNodeMap->addNode(pos, name, false, false); // startNode not used, but addNode as side effect, fragment marked for removal.
+        /* TravelNode* startNode  = */ TravelNodeMap::instance().addNode(pos, name, false, false); // startNode not used, but addNode as side effect, fragment marked for removal.
 
-        for (auto& endNode : sTravelNodeMap->getNodes(pos, 2000))
+        for (auto& endNode : TravelNodeMap::instance().getNodes(pos, 2000))
         {
             endNode->setLinked(false);
         }
 
         botAI->TellMasterNoFacing("Node " + name + " created.");
 
-        sTravelNodeMap->setHasToGen();
+        TravelNodeMap::instance().setHasToGen();
 
         return true;
     }
@@ -211,7 +215,7 @@ bool DebugAction::Execute(Event event)
     {
         WorldPosition pos(bot);
 
-        TravelNode* startNode = sTravelNodeMap->getNode(pos, nullptr, 50);
+        TravelNode* startNode = TravelNodeMap::instance().getNode(pos, nullptr, 50);
 
         if (!startNode)
             return false;
@@ -221,24 +225,24 @@ bool DebugAction::Execute(Event event)
             botAI->TellMasterNoFacing("Node can not be removed.");
         }
 
-        sTravelNodeMap->m_nMapMtx.lock();
-        sTravelNodeMap->removeNode(startNode);
+        TravelNodeMap::instance().m_nMapMtx.lock();
+        TravelNodeMap::instance().removeNode(startNode);
         botAI->TellMasterNoFacing("Node removed.");
-        sTravelNodeMap->m_nMapMtx.unlock();
+        TravelNodeMap::instance().m_nMapMtx.unlock();
 
-        sTravelNodeMap->setHasToGen();
+        TravelNodeMap::instance().setHasToGen();
 
         return true;
     }
     else if (text.find("reset node") != std::string::npos)
     {
-        for (auto& node : sTravelNodeMap->getNodes())
+        for (auto& node : TravelNodeMap::instance().getNodes())
             node->setLinked(false);
         return true;
     }
     else if (text.find("reset path") != std::string::npos)
     {
-        for (auto& node : sTravelNodeMap->getNodes())
+        for (auto& node : TravelNodeMap::instance().getNodes())
             for (auto& path : *node->getLinks())
                 node->removeLinkTo(path.first, true);
         return true;
@@ -246,23 +250,23 @@ bool DebugAction::Execute(Event event)
     else if (text.find("gen node") != std::string::npos)
     {
         // Pathfinder
-        sTravelNodeMap->generateNodes();
+        TravelNodeMap::instance().generateNodes();
         return true;
     }
     else if (text.find("gen path") != std::string::npos)
     {
-        sTravelNodeMap->generatePaths();
+        TravelNodeMap::instance().generatePaths();
         return true;
     }
     else if (text.find("crop path") != std::string::npos)
     {
-        sTravelNodeMap->removeUselessPaths();
+        TravelNodeMap::instance().removeUselessPaths();
         return true;
     }
     else if (text.find("save node") != std::string::npos)
     {
-        sTravelNodeMap->printNodeStore();
-        sTravelNodeMap->saveNodeStore();
+        TravelNodeMap::instance().printNodeStore();
+        TravelNodeMap::instance().saveNodeStore();
         return true;
     }
     else if (text.find("load node") != std::string::npos)
@@ -270,8 +274,8 @@ bool DebugAction::Execute(Event event)
         std::thread t(
             []
             {
-                sTravelNodeMap->removeNodes();
-                sTravelNodeMap->loadNodeStore();
+                TravelNodeMap::instance().removeNodes();
+                TravelNodeMap::instance().loadNodeStore();
             });
 
         t.detach();
@@ -282,7 +286,7 @@ bool DebugAction::Execute(Event event)
     {
         WorldPosition pos(bot);
 
-        std::vector<TravelNode*> nodes = sTravelNodeMap->getNodes(pos, 500);
+        std::vector<TravelNode*> nodes = TravelNodeMap::instance().getNodes(pos, 500);
 
         for (auto& node : nodes)
         {
@@ -298,7 +302,7 @@ bool DebugAction::Execute(Event event)
                 for (auto p : ppath)
                 {
                     Creature* wpCreature =
-                        bot->SummonCreature(1, p.getX(), p.getY(), p.getZ(), 0, TEMPSUMMON_TIMED_DESPAWN, 20000.0f);
+                        bot->SummonCreature(1, p.GetPositionX(), p.GetPositionY(), p.GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN, 20000.0f);
                     // addAura(246, wpCreature);
                     units.push_back(wpCreature->GetGUID());
 
@@ -325,11 +329,11 @@ bool DebugAction::Execute(Event event)
             WorldPosition botPos(bot);
             WorldPosition botPos1 = botPos;
 
-            botPos.setX(botPos.getX() + cos(ang) * dist);
-            botPos.setY(botPos.getY() + sin(ang) * dist);
+            botPos.setX(botPos.GetPositionX() + cos(ang) * dist);
+            botPos.setY(botPos.GetPositionY() + sin(ang) * dist);
             botPos.setZ(botPos.getHeight() + 2);
 
-            Creature* wpCreature = bot->SummonCreature(2334, botPos.getX(), botPos.getY(), botPos.getZ(), 0,
+            Creature* wpCreature = bot->SummonCreature(2334, botPos.GetPositionX(), botPos.GetPositionY(), botPos.GetPositionZ(), 0,
                                                        TEMPSUMMON_TIMED_DESPAWN, 10000.0f);
 
             FakeSpell(spellEffect, wpCreature, wpCreature, prev->GetGUID(), {}, {}, botPos, botPos);
@@ -352,11 +356,11 @@ bool DebugAction::Execute(Event event)
             WorldPosition botPos(bot);
             WorldPosition botPos1 = botPos;
 
-            botPos.setX(botPos.getX() + cos(ang) * dist);
-            botPos.setY(botPos.getY() + sin(ang) * dist);
+            botPos.setX(botPos.GetPositionX() + cos(ang) * dist);
+            botPos.setY(botPos.GetPositionY() + sin(ang) * dist);
             botPos.setZ(botPos.getHeight() + 2);
 
-            Creature* wpCreature = bot->SummonCreature(2334, botPos.getX(), botPos.getY(), botPos.getZ(), 0,
+            Creature* wpCreature = bot->SummonCreature(2334, botPos.GetPositionX(), botPos.GetPositionY(), botPos.GetPositionZ(), 0,
                                                        TEMPSUMMON_TIMED_DESPAWN, 10000.0f);
 
             if (wpCreature)
@@ -383,11 +387,11 @@ bool DebugAction::Execute(Event event)
             WorldPosition botPos(bot);
             WorldPosition botPos1 = botPos;
 
-            botPos.setX(botPos.getX() + cos(ang) * dist);
-            botPos.setY(botPos.getY() + sin(ang) * dist);
+            botPos.setX(botPos.GetPositionX() + cos(ang) * dist);
+            botPos.setY(botPos.GetPositionY() + sin(ang) * dist);
             botPos.setZ(botPos.getHeight() + 2);
 
-            Creature* wpCreature = bot->SummonCreature(2334, botPos.getX(), botPos.getY(), botPos.getZ(), 0,
+            Creature* wpCreature = bot->SummonCreature(2334, botPos.GetPositionX(), botPos.GetPositionY(), botPos.GetPositionZ(), 0,
                                                        TEMPSUMMON_TIMED_DESPAWN, 5000.0f + i * 100.0f);
             wpCreature->SetObjectScale(0.5f);
 
@@ -411,11 +415,11 @@ bool DebugAction::Execute(Event event)
 
             WorldPosition botPos(bot);
 
-            botPos.setX(botPos.getX() + cos(ang) * dist);
-            botPos.setY(botPos.getY() + sin(ang) * dist);
+            botPos.setX(botPos.GetPositionX() + cos(ang) * dist);
+            botPos.setY(botPos.GetPositionY() + sin(ang) * dist);
             botPos.setZ(botPos.getHeight() + 2);
 
-            Creature* wpCreature = bot->SummonCreature(2334, botPos.getX(), botPos.getY(), botPos.getZ(), 0,
+            Creature* wpCreature = bot->SummonCreature(2334, botPos.GetPositionX(), botPos.GetPositionY(), botPos.GetPositionZ(), 0,
                                                        TEMPSUMMON_TIMED_DESPAWN, 10000.0f);
 
             units.push_back(wpCreature->GetGUID());
@@ -480,13 +484,13 @@ bool DebugAction::Execute(Event event)
                 uint32 effect = dx + dy * 10 + spellEffect * 100;
                 WorldPosition botPos(bot);
 
-                botPos.setX(botPos.getX() + (dx - 5) * 5);
-                botPos.setY(botPos.getY() + (dy - 5) * 5);
+                botPos.setX(botPos.GetPositionX() + (dx - 5) * 5);
+                botPos.setY(botPos.GetPositionY() + (dy - 5) * 5);
                 botPos.setZ(botPos.getHeight());
 
                 Creature* wpCreature =
-                    bot->SummonCreature((dy == 0 && (dx == 0 || dx == 2)) ? 6 : 2, botPos.getX(), botPos.getY(),
-                                        botPos.getZ(), 0, TEMPSUMMON_TIMED_DESPAWN, 10000.0f);
+                    bot->SummonCreature((dy == 0 && (dx == 0 || dx == 2)) ? 6 : 2, botPos.GetPositionX(), botPos.GetPositionY(),
+                                        botPos.GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN, 10000.0f);
 
                 if (wpCreature)
                 {
@@ -512,12 +516,12 @@ bool DebugAction::Execute(Event event)
                 uint32 effect = dx + dy * 10 + spellEffect * 100;
                 WorldPosition botPos(bot);
 
-                botPos.setX(botPos.getX() + (dx - 5) * 5);
-                botPos.setY(botPos.getY() + (dy - 5) * 5);
+                botPos.setX(botPos.GetPositionX() + (dx - 5) * 5);
+                botPos.setY(botPos.GetPositionY() + (dy - 5) * 5);
                 botPos.setZ(botPos.getHeight());
 
-                Creature* wpCreature = bot->SummonCreature(effect, botPos.getX(), botPos.getY(), botPos.getZ(), 0,
-                                                           TEMPSUMMON_TIMED_DESPAWN, 10000.0f);
+                bot->SummonCreature(effect, botPos.GetPositionX(), botPos.GetPositionY(), botPos.GetPositionZ(), 0,
+                                    TEMPSUMMON_TIMED_DESPAWN, 10000.0f);
             }
         }
         return true;
@@ -532,8 +536,8 @@ bool DebugAction::Execute(Event event)
                 uint32 effect = dx + dy * 10 + spellEffect * 100;
                 WorldPosition botPos(bot);
 
-                botPos.setX(botPos.getX() + (dx - 5) * 5);
-                botPos.setY(botPos.getY() + (dy - 5) * 5);
+                botPos.setX(botPos.GetPositionX() + (dx - 5) * 5);
+                botPos.setY(botPos.GetPositionY() + (dy - 5) * 5);
                 botPos.setZ(botPos.getHeight());
 
                 FakeSpell(effect, bot, nullptr, ObjectGuid::Empty, {}, {}, botPos, botPos, true);
@@ -552,11 +556,11 @@ bool DebugAction::Execute(Event event)
                 uint32 effect = dx + dy * 10 + spellEffect * 100;
                 WorldPosition botPos(bot);
 
-                botPos.setX(botPos.getX() + (dx - 5) * 5);
-                botPos.setY(botPos.getY() + (dy - 5) * 5);
+                botPos.setX(botPos.GetPositionX() + (dx - 5) * 5);
+                botPos.setY(botPos.GetPositionY() + (dy - 5) * 5);
                 botPos.setZ(botPos.getHeight());
 
-                Creature* wpCreature = bot->SummonCreature(2334, botPos.getX(), botPos.getY(), botPos.getZ(), 0,
+                Creature* wpCreature = bot->SummonCreature(2334, botPos.GetPositionX(), botPos.GetPositionY(), botPos.GetPositionZ(), 0,
                                                            TEMPSUMMON_TIMED_DESPAWN, 10000.0f);
 
                 if (wpCreature)
@@ -568,7 +572,7 @@ bool DebugAction::Execute(Event event)
                     // wpCreature->SendMessageToSet(&data, true);
                     datMap.push_back(data);
 
-                    // wpCreature->MonsterMoveWithSpeed(botPos.getX(), botPos.getY() + 80, botPos.getZ(), 8.0f, true,
+                    // wpCreature->MonsterMoveWithSpeed(botPos.GetPositionX(), botPos.GetPositionY() + 80, botPos.GetPositionZ(), 8.0f, true,
                     // true);
                 }
             }
@@ -600,13 +604,13 @@ bool DebugAction::Execute(Event event)
                 uint32 effect = dx + dy * 10 + spellEffect * 100;
                 WorldPosition botPos(bot);
 
-                botPos.setX(botPos.getX() + (dx - 5) * 5);
-                botPos.setY(botPos.getY() + (dy - 5) * 5);
+                botPos.setX(botPos.GetPositionX() + (dx - 5) * 5);
+                botPos.setY(botPos.GetPositionY() + (dy - 5) * 5);
                 botPos.setZ(botPos.getHeight());
 
                 Creature* wpCreature =
-                    bot->SummonCreature((dy == 0 && (dx == 0 || dx == 2)) ? 6 : 2, botPos.getX(), botPos.getY(),
-                                        botPos.getZ(), 0, TEMPSUMMON_TIMED_DESPAWN, 10000.0f);
+                    bot->SummonCreature((dy == 0 && (dx == 0 || dx == 2)) ? 6 : 2, botPos.GetPositionX(), botPos.GetPositionY(),
+                                        botPos.GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN, 10000.0f);
 
                 if (wpCreature)
                 {
@@ -646,12 +650,12 @@ bool DebugAction::Execute(Event event)
                 uint32 effect = dx + dy * 10 + spellEffect * 100;
                 WorldPosition botPos(bot);
 
-                botPos.setX(botPos.getX() + (dx - 5) * 5);
-                botPos.setY(botPos.getY() + (dy - 5) * 5);
+                botPos.setX(botPos.GetPositionX() + (dx - 5) * 5);
+                botPos.setY(botPos.GetPositionY() + (dy - 5) * 5);
                 botPos.setZ(botPos.getHeight());
 
-                wpCreature = bot->SummonCreature((dy == 0 && (dx == 0 || dx == 2)) ? 6 : 2, botPos.getX(),
-                                                 botPos.getY(), botPos.getZ(), 0, TEMPSUMMON_TIMED_DESPAWN, 10000.0f);
+                wpCreature = bot->SummonCreature((dy == 0 && (dx == 0 || dx == 2)) ? 6 : 2, botPos.GetPositionX(),
+                                                 botPos.GetPositionY(), botPos.GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN, 10000.0f);
 
                 if (wpCreature && lCreature)
                 {
@@ -675,11 +679,11 @@ bool DebugAction::Execute(Event event)
                 uint32 effect = dx + dy * 10 + spellEffect * 100;
                 WorldPosition botPos(bot);
 
-                botPos.setX(botPos.getX() + (dx - 5) * 5);
-                botPos.setY(botPos.getY() + (dy - 5) * 5);
+                botPos.setX(botPos.GetPositionX() + (dx - 5) * 5);
+                botPos.setY(botPos.GetPositionY() + (dy - 5) * 5);
                 botPos.setZ(botPos.getHeight());
 
-                wpCreature = bot->SummonCreature(2334, botPos.getX(), botPos.getY(), botPos.getZ(), 0,
+                wpCreature = bot->SummonCreature(2334, botPos.GetPositionX(), botPos.GetPositionY(), botPos.GetPositionZ(), 0,
                                                  TEMPSUMMON_TIMED_DESPAWN, 10000.0f);
 
                 if (wpCreature)
@@ -708,11 +712,11 @@ bool DebugAction::Execute(Event event)
             {
                 WorldPosition botPos(bot);
 
-                botPos.setX(botPos.getX() + (dx - 5) * 5);
-                botPos.setY(botPos.getY() + (dy - 5) * 5);
+                botPos.setX(botPos.GetPositionX() + (dx - 5) * 5);
+                botPos.setY(botPos.GetPositionY() + (dy - 5) * 5);
                 botPos.setZ(botPos.getHeight());
 
-                Creature* wpCreature = bot->SummonCreature(2334, botPos.getX(), botPos.getY(), botPos.getZ(), 0,
+                Creature* wpCreature = bot->SummonCreature(2334, botPos.GetPositionX(), botPos.GetPositionY(), botPos.GetPositionZ(), 0,
                                                            TEMPSUMMON_TIMED_DESPAWN, 10000.0f);
 
                 all_targets.push_back(wpCreature->GetGUID());
@@ -788,11 +792,11 @@ bool DebugAction::Execute(Event event)
             {
                 WorldPosition botPos(bot);
 
-                botPos.setX(botPos.getX() + (dx - 5) * 5);
-                botPos.setY(botPos.getY() + (dy - 5) * 5);
+                botPos.setX(botPos.GetPositionX() + (dx - 5) * 5);
+                botPos.setY(botPos.GetPositionY() + (dy - 5) * 5);
                 botPos.setZ(botPos.getHeight());
 
-                Creature* wpCreature = bot->SummonCreature(2334, botPos.getX(), botPos.getY(), botPos.getZ(), 0,
+                Creature* wpCreature = bot->SummonCreature(2334, botPos.GetPositionX(), botPos.GetPositionY(), botPos.GetPositionZ(), 0,
                                                            TEMPSUMMON_TIMED_DESPAWN, 10000.0f);
 
                 all_targets.push_back(wpCreature->GetGUID());
@@ -868,13 +872,13 @@ bool DebugAction::Execute(Event event)
                 uint32 effect = dx + dy * 10 + soundEffects * 100;
                 WorldPosition botPos(bot);
 
-                botPos.setX(botPos.getX() + (dx - 5) * 5);
-                botPos.setY(botPos.getY() + (dy - 5) * 5);
+                botPos.setX(botPos.GetPositionX() + (dx - 5) * 5);
+                botPos.setY(botPos.GetPositionY() + (dy - 5) * 5);
                 botPos.setZ(botPos.getHeight());
 
                 Creature* wpCreature =
-                    bot->SummonCreature((dy == 0 && (dx == 0 || dx == 2)) ? 6 : 2, botPos.getX(), botPos.getY(),
-                                        botPos.getZ(), 0, TEMPSUMMON_TIMED_DESPAWN, 10000.0f);
+                    bot->SummonCreature((dy == 0 && (dx == 0 || dx == 2)) ? 6 : 2, botPos.GetPositionX(), botPos.GetPositionY(),
+                                        botPos.GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN, 10000.0f);
 
                 wpCreature->PlayDistanceSound(effect);
             }
@@ -964,7 +968,7 @@ void DebugAction::FakeSpell(uint32 spellId, Unit* truecaster, Unit* caster, Obje
             m_targets.SetDst(dest);
 
         if ((spellInfo && spellInfo->Targets & TARGET_FLAG_SOURCE_LOCATION) || forceDest)
-            m_targets.SetSrc(source.getX(), source.getY(), source.getZ());
+            m_targets.SetSrc(source.GetPositionX(), source.GetPositionY(), source.GetPositionZ());
 
         if (!forceDest && target)
             if (!spellInfo ||

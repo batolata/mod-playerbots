@@ -10,10 +10,9 @@
 #include <boost/smart_ptr.hpp>
 #include <boost/thread/thread.hpp>
 #include <cstdlib>
-#include <iostream>
+#include "RandomPlayerbotMgr.h"
 
 #include "IoContext.h"
-#include "Playerbots.h"
 
 using boost::asio::ip::tcp;
 typedef boost::shared_ptr<tcp::socket> socket_ptr;
@@ -48,7 +47,7 @@ void session(socket_ptr sock)
         std::string buffer, request;
         while (ReadLine(sock, &buffer, &request))
         {
-            std::string const response = sRandomPlayerbotMgr->HandleRemoteCommand(request) + "\n";
+            std::string const response = RandomPlayerbotMgr::instance().HandleRemoteCommand(request) + "\n";
             boost::asio::write(*sock, boost::asio::buffer(response.c_str(), response.size()));
             request = "";
         }
@@ -72,19 +71,19 @@ void server(Acore::Asio::IoContext& io_service, short port)
 
 void Run()
 {
-    if (!sPlayerbotAIConfig->commandServerPort)
+    if (!sPlayerbotAIConfig.commandServerPort)
     {
         return;
     }
 
     std::ostringstream s;
-    s << "Starting Playerbots Command Server on port " << sPlayerbotAIConfig->commandServerPort;
+    s << "Starting Playerbots Command Server on port " << sPlayerbotAIConfig.commandServerPort;
     LOG_INFO("playerbots", "{}", s.str().c_str());
 
     try
     {
         Acore::Asio::IoContext io_service;
-        server(io_service, sPlayerbotAIConfig->commandServerPort);
+        server(io_service, sPlayerbotAIConfig.commandServerPort);
     }
 
     catch (std::exception& e)

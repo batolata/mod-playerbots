@@ -5,8 +5,6 @@
 
 #include "RacialsStrategy.h"
 
-#include "Playerbots.h"
-
 class RacialsStrategyActionNodeFactory : public NamedObjectFactory<ActionNode>
 {
 public:
@@ -35,6 +33,9 @@ void RacialsStrategy::InitTriggers(std::vector<TriggerNode*>& triggers)
         "generic boost", { NextAction("blood fury", ACTION_NORMAL + 5),
         NextAction("berserking", ACTION_NORMAL + 5),
         NextAction("use trinket", ACTION_NORMAL + 4) }));
+
+    triggers.push_back(new TriggerNode(
+        "loss of control", { NextAction("every man for himself", ACTION_EMERGENCY + 1) }));
 
 }
 

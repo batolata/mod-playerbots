@@ -4,14 +4,9 @@
 #include "PlayerbotAIConfig.h"
 #include "ObjectAccessor.h"
 #include "GenericTriggers.h"
-#include "DungeonStrategyUtils.h"
-#include "EventMap.h"
 #include "Playerbots.h"
-#include "ScriptedCreature.h"
 #include "Trigger.h"
-#include "CellImpl.h"
 #include "GridNotifiers.h"
-#include "GridNotifiersImpl.h"
 #include "Vehicle.h"
 
 //Lord Marrogwar
@@ -287,7 +282,7 @@ bool IccPutricideGrowingOozePuddleTrigger::IsActive()
 
     Difficulty diff = bot->GetRaidDifficulty();
 
-    if (sPlayerbotAIConfig->EnableICCBuffs && diff && (diff == RAID_DIFFICULTY_10MAN_HEROIC || diff == RAID_DIFFICULTY_25MAN_HEROIC))
+    if (sPlayerbotAIConfig.EnableICCBuffs && diff && (diff == RAID_DIFFICULTY_10MAN_HEROIC || diff == RAID_DIFFICULTY_25MAN_HEROIC))
     {
         //-------CHEAT-------
         if (!bot->HasAura(SPELL_EXPERIENCED))
@@ -834,7 +829,7 @@ bool IccSindragosaGroupPositionTrigger::IsActive()
 
     Difficulty diff = bot->GetRaidDifficulty();
 
-    if (sPlayerbotAIConfig->EnableICCBuffs && diff && (diff == RAID_DIFFICULTY_10MAN_HEROIC || diff == RAID_DIFFICULTY_25MAN_HEROIC))
+    if (sPlayerbotAIConfig.EnableICCBuffs && diff && (diff == RAID_DIFFICULTY_10MAN_HEROIC || diff == RAID_DIFFICULTY_25MAN_HEROIC))
     {
         //-------CHEAT-------
         if (!bot->HasAura(SPELL_EXPERIENCED))
@@ -1107,7 +1102,6 @@ bool IccLichKingShadowTrapTrigger::IsActive()
     // search for all nearby traps
     GuidVector npcs = AI_VALUE(GuidVector, "nearest hostile npcs");
     std::vector<Unit*> nearbyTraps;
-    bool needToMove = false;
 
     for (auto& npc : npcs)
     {

@@ -7,9 +7,10 @@
 
 #include "Event.h"
 #include "GuildTaskMgr.h"
-#include "Playerbots.h"
+#include "PlayerbotAIConfig.h"
+#include "PlayerbotAI.h"
 
-bool CheckMailAction::Execute(Event event)
+bool CheckMailAction::Execute(Event /*event*/)
 {
     WorldPacket p;
     bot->GetSession()->HandleQueryNextMailTime(p);
@@ -28,7 +29,7 @@ bool CheckMailAction::Execute(Event event)
             continue;
 
         uint32 account = owner->GetSession()->GetAccountId();
-        if (sPlayerbotAIConfig->IsInRandomAccountList(account))
+        if (PlayerbotAIConfig::instance().IsInRandomAccountList(account))
             continue;
 
         ProcessMail(mail, owner, trans);
@@ -80,7 +81,7 @@ void CheckMailAction::ProcessMail(Mail* mail, Player* owner, CharacterDatabaseTr
         if (!item)
             continue;
 
-        if (!sGuildTaskMgr->CheckItemTask(i->item_template, item->GetCount(), owner, bot, true))
+        if (!GuildTaskMgr::instance().CheckItemTask(i->item_template, item->GetCount(), owner, bot, true))
         {
             std::ostringstream body;
             body << "Hello, " << owner->GetName() << ",\n";

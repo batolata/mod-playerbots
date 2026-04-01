@@ -10,7 +10,7 @@
 #include "Playerbots.h"
 #include "ServerFacade.h"
 
-bool ReachTargetAction::Execute(Event event) { return ReachCombatTo(AI_VALUE(Unit*, GetTargetName()), distance); }
+bool ReachTargetAction::Execute(Event /*event*/) { return ReachCombatTo(AI_VALUE(Unit*, GetTargetName()), distance); }
 
 bool ReachTargetAction::isUseful()
 {
@@ -28,7 +28,7 @@ bool ReachTargetAction::isUseful()
     Unit* target = GetTarget();
     // float dis = distance + CONTACT_DISTANCE;
     return target &&
-           !bot->IsWithinCombatRange(target, distance);  // sServerFacade->IsDistanceGreaterThan(AI_VALUE2(float,
+           !bot->IsWithinCombatRange(target, distance);  // ServerFacade::instance().IsDistanceGreaterThan(AI_VALUE2(float,
                                                          // "distance", GetTargetName()), distance);
 }
 
@@ -42,8 +42,8 @@ bool CastReachTargetSpellAction::isUseful()
         return false;
     }
 
-    return sServerFacade->IsDistanceGreaterThan(AI_VALUE2(float, "distance", "current target"),
-                                                (distance + sPlayerbotAIConfig->contactDistance));
+    return ServerFacade::instance().IsDistanceGreaterThan(AI_VALUE2(float, "distance", "current target"),
+                                                (distance + sPlayerbotAIConfig.contactDistance));
 }
 
 ReachSpellAction::ReachSpellAction(PlayerbotAI* botAI)

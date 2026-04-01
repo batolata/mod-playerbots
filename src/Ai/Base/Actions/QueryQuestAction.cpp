@@ -7,7 +7,7 @@
 
 #include "ChatHelper.h"
 #include "Event.h"
-#include "Playerbots.h"
+#include "PlayerbotAI.h"
 
 void QueryQuestAction::TellObjective(std::string const name, uint32 available, uint32 required)
 {
@@ -16,7 +16,6 @@ void QueryQuestAction::TellObjective(std::string const name, uint32 available, u
 
 bool QueryQuestAction::Execute(Event event)
 {
-    Player* requester = event.getOwner() ? event.getOwner() : GetMaster();
     Player* bot = botAI->GetBot();
     WorldPosition botPos(bot);
     WorldPosition* ptr_botpos = &botPos;
@@ -73,7 +72,7 @@ bool QueryQuestAction::Execute(Event event)
         {
             uint32 limit = 0;
             std::vector<TravelDestination*> allDestinations =
-                sTravelMgr->getQuestTravelDestinations(bot, questId, true, true, -1);
+                TravelMgr::instance().getQuestTravelDestinations(bot, questId, true, true, -1);
 
             std::sort(allDestinations.begin(), allDestinations.end(), [ptr_botpos](TravelDestination* i, TravelDestination* j) {return i->distanceTo(ptr_botpos) < j->distanceTo(ptr_botpos); });
             for (auto dest : allDestinations)

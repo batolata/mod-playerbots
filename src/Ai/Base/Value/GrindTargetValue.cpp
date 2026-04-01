@@ -30,7 +30,6 @@ Unit* GrindTargetValue::Calculate()
 
 Unit* GrindTargetValue::FindTargetForGrinding(uint32 assistCount)
 {
-    uint32 memberCount = 1;
     Group* group = bot->GetGroup();
     Player* master = GetMaster();
 
@@ -65,7 +64,6 @@ Unit* GrindTargetValue::FindTargetForGrinding(uint32 assistCount)
         if (!unit->IsInWorld() || unit->IsDuringRemoveFromWorld())
             continue;
 
-        auto& rep = bot->ToPlayer()->GetReputationMgr();
         if (unit->ToCreature() && !unit->ToCreature()->GetCreatureTemplate()->lootid &&
             bot->GetReactionTo(unit) >= REP_NEUTRAL)
             continue;
@@ -82,12 +80,12 @@ Unit* GrindTargetValue::FindTargetForGrinding(uint32 assistCount)
         if (!bot->InBattleground() && GetTargetingPlayerCount(unit) > assistCount)
             continue;
 
-        // if (!bot->InBattleground() && master && master->GetDistance(unit) >= sPlayerbotAIConfig->grindDistance &&
-        // !sRandomPlayerbotMgr->IsRandomBot(bot)) continue;
+        // if (!bot->InBattleground() && master && master->GetDistance(unit) >= sPlayerbotAIConfig.grindDistance &&
+        // !sRandomPlayerbotMgr.IsRandomBot(bot)) continue;
 
         // Bots in bot-groups no have a more limited range to look for grind target
         if (!bot->InBattleground() && master && botAI->HasStrategy("follow", BotState::BOT_STATE_NON_COMBAT) &&
-            sServerFacade->GetDistance2d(master, unit) > sPlayerbotAIConfig->lootDistance)
+            ServerFacade::instance().GetDistance2d(master, unit) > sPlayerbotAIConfig.lootDistance)
         {
             if (botAI->HasStrategy("debug grind", BotState::BOT_STATE_NON_COMBAT))
                 botAI->TellMaster(chat->FormatWorldobject(unit) + " ignored (far from master).");
@@ -107,7 +105,7 @@ Unit* GrindTargetValue::FindTargetForGrinding(uint32 assistCount)
             continue;
         }
 
-        bool inactiveGrindStatus = botAI->rpgInfo.status != RPG_WANDER_RANDOM && botAI->rpgInfo.status != RPG_IDLE;
+        bool inactiveGrindStatus = botAI->rpgInfo.GetStatus() != RPG_WANDER_RANDOM && botAI->rpgInfo.GetStatus() != RPG_IDLE;
 
         float aggroRange = 30.0f;
         if (unit->ToCreature())

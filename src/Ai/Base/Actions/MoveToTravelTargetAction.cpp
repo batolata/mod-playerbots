@@ -7,10 +7,9 @@
 
 #include "ChooseRpgTargetAction.h"
 #include "LootObjectStack.h"
-#include "PathGenerator.h"
 #include "Playerbots.h"
 
-bool MoveToTravelTargetAction::Execute(Event event)
+bool MoveToTravelTargetAction::Execute(Event /*event*/)
 {
     TravelTarget* target = AI_VALUE(TravelTarget*, "travel target");
 
@@ -43,7 +42,7 @@ bool MoveToTravelTargetAction::Execute(Event event)
 
             if (memberDistance < 50.0f)
                 continue;
-            if (memberDistance > sPlayerbotAIConfig->reactDistance * 20)
+            if (memberDistance > sPlayerbotAIConfig.reactDistance * 20)
                 continue;
 
             // float memberAngle = botLocation.getAngleBetween(targetPos, memberPos);
@@ -65,9 +64,9 @@ bool MoveToTravelTargetAction::Execute(Event event)
                 botAI->TellMasterNoFacing(out);
             }
 
-            target->setExpireIn(target->getTimeLeft() + sPlayerbotAIConfig->maxWaitForMove);
+            target->setExpireIn(target->getTimeLeft() + sPlayerbotAIConfig.maxWaitForMove);
 
-            botAI->SetNextCheckDelay(sPlayerbotAIConfig->maxWaitForMove);
+            botAI->SetNextCheckDelay(sPlayerbotAIConfig.maxWaitForMove);
 
             return true;
         }
@@ -80,7 +79,7 @@ bool MoveToTravelTargetAction::Execute(Event event)
 
     if (target->getMaxTravelTime() > target->getTimeLeft())  // The bot is late. Speed it up.
     {
-        // distance = sPlayerbotAIConfig->fleeDistance;
+        // distance = sPlayerbotAIConfig.fleeDistance;
         // angle = bot->GetAngle(location.GetPositionX(), location.GetPositionY());
         // location = botLocation.getLocation();
     }

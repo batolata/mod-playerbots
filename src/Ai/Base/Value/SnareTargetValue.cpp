@@ -5,7 +5,8 @@
 
 #include "SnareTargetValue.h"
 
-#include "Playerbots.h"
+#include "AiObjectContext.h"
+#include "PlayerbotAI.h"
 #include "ServerFacade.h"
 
 Unit* SnareTargetValue::Calculate()
@@ -13,7 +14,6 @@ Unit* SnareTargetValue::Calculate()
     std::string const spell = qualifier;
 
     GuidVector attackers = botAI->GetAiObjectContext()->GetValue<GuidVector>("attackers")->Get();
-    Unit* target = botAI->GetAiObjectContext()->GetValue<Unit*>("current target")->Get();
     for (ObjectGuid const guid : attackers)
     {
         Unit* unit = botAI->GetUnit(guid);
@@ -30,7 +30,7 @@ Unit* SnareTargetValue::Calculate()
                 return unit;
             case CHASE_MOTION_TYPE:
             {
-                chaseTarget = sServerFacade->GetChaseTarget(unit);
+                chaseTarget = ServerFacade::instance().GetChaseTarget(unit);
                 if (!chaseTarget)
                     continue;
                 Player* chaseTargetPlayer = ObjectAccessor::FindPlayer(chaseTarget->GetGUID());

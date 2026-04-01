@@ -50,7 +50,7 @@ bool ReachAreaTriggerAction::Execute(Event event)
         /*forceDestination*/ false);
 
     float distance = bot->GetDistance(at->x, at->y, at->z);
-    float delay = 1000.0f * distance / bot->GetSpeed(MOVE_RUN) + sPlayerbotAIConfig->reactDelay;
+    float delay = 1000.0f * distance / bot->GetSpeed(MOVE_RUN) + sPlayerbotAIConfig.reactDelay;
     botAI->TellError("Wait for me");
     botAI->SetNextCheckDelay(delay);
     context->GetValue<LastMovement&>("last area trigger")->Get().lastAreaTrigger = triggerId;
@@ -58,7 +58,7 @@ bool ReachAreaTriggerAction::Execute(Event event)
     return true;
 }
 
-bool AreaTriggerAction::Execute(Event event)
+bool AreaTriggerAction::Execute(Event /*event*/)
 {
     LastMovement& movement = context->GetValue<LastMovement&>("last area trigger")->Get();
 

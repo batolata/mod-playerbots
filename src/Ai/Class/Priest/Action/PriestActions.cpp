@@ -8,15 +8,13 @@
 #include "Event.h"
 #include "Playerbots.h"
 
-bool CastRemoveShadowformAction::isUseful() { return botAI->HasAura("shadowform", AI_VALUE(Unit*, "self target")); }
-
-bool CastRemoveShadowformAction::isPossible() { return true; }
-
-bool CastRemoveShadowformAction::Execute(Event event)
+bool CastRemoveShadowformAction::Execute(Event /*event*/)
 {
     botAI->RemoveAura("shadowform");
     return true;
 }
+
+bool CastRemoveShadowformAction::isUseful() { return botAI->HasAura("shadowform", AI_VALUE(Unit*, "self target")); }
 
 Unit* CastPowerWordShieldOnAlmostFullHealthBelowAction::GetTarget()
 {
@@ -30,11 +28,11 @@ Unit* CastPowerWordShieldOnAlmostFullHealthBelowAction::GetTarget()
         {
             continue;
         }
-        if (player->GetHealthPct() > sPlayerbotAIConfig->almostFullHealth)
+        if (player->GetHealthPct() > sPlayerbotAIConfig.almostFullHealth)
         {
             continue;
         }
-        if (player->GetDistance2d(bot) > sPlayerbotAIConfig->spellDistance)
+        if (player->GetDistance2d(bot) > sPlayerbotAIConfig.spellDistance)
         {
             continue;
         }
@@ -59,11 +57,11 @@ bool CastPowerWordShieldOnAlmostFullHealthBelowAction::isUseful()
         {
             continue;
         }
-        if (player->GetHealthPct() > sPlayerbotAIConfig->almostFullHealth)
+        if (player->GetHealthPct() > sPlayerbotAIConfig.almostFullHealth)
         {
             continue;
         }
-        if (player->GetDistance2d(bot) > sPlayerbotAIConfig->spellDistance)
+        if (player->GetDistance2d(bot) > sPlayerbotAIConfig.spellDistance)
         {
             continue;
         }
@@ -89,7 +87,7 @@ Unit* CastPowerWordShieldOnNotFullAction::GetTarget()
         {
             continue;
         }
-        if (player->GetDistance2d(bot) > sPlayerbotAIConfig->spellDistance)
+        if (player->GetDistance2d(bot) > sPlayerbotAIConfig.spellDistance)
         {
             continue;
         }

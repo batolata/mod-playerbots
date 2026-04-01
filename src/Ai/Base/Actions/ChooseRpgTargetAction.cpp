@@ -6,7 +6,6 @@
 #include <random>
 
 #include "ChooseRpgTargetAction.h"
-#include "BattlegroundMgr.h"
 #include "BudgetValues.h"
 #include "ChatHelper.h"
 #include "Event.h"
@@ -14,7 +13,6 @@
 #include "GuildCreateActions.h"
 #include "Playerbots.h"
 #include "RpgSubActions.h"
-#include "Util.h"
 #include "ServerFacade.h"
 #include "PossibleRpgTargetsValue.h"
 
@@ -112,9 +110,8 @@ float ChooseRpgTargetAction::getMaxRelevance(GuidPosition guidP)
     return floor((maxRelevance - 1.0) * 1000.0f);
 }
 
-bool ChooseRpgTargetAction::Execute(Event event)
+bool ChooseRpgTargetAction::Execute(Event /*event*/)
 {
-    //TravelTarget* travelTarget = AI_VALUE(TravelTarget*, "travel target"); //not used, line marked for removal.
     Player* master = botAI->GetMaster();
     GuidPosition masterRpgTarget;
     if (master && master != bot && GET_PLAYERBOT_AI(master) && master->GetMapId() == bot->GetMapId() && !master->IsBeingTeleported())
@@ -126,7 +123,6 @@ bool ChooseRpgTargetAction::Execute(Event event)
         master = nullptr;
 
     std::unordered_map<ObjectGuid, uint32> targets;
-    // uint32 num = 0; //not used, line marked for removal.
     GuidVector possibleTargets = AI_VALUE(GuidVector, "possible rpg targets");
     GuidVector possibleObjects = AI_VALUE(GuidVector, "nearest game objects no los");
     GuidVector possiblePlayers = AI_VALUE(GuidVector, "nearest friendly players");
@@ -248,7 +244,7 @@ bool ChooseRpgTargetAction::Execute(Event event)
     }
 
     std::mt19937 gen(time(0));
-    sTravelMgr->weighted_shuffle(guidps.begin(), guidps.end(), relevances.begin(), relevances.end(), gen);
+    TravelMgr::instance().weighted_shuffle(guidps.begin(), guidps.end(), relevances.begin(), relevances.end(), gen);
 
     GuidPosition guidP(guidps.front());
     if (!guidP)
@@ -279,7 +275,7 @@ bool ChooseRpgTargetAction::isUseful()
 
     GuidPosition guidP = AI_VALUE(GuidPosition, "rpg target");
 
-    if (guidP && guidP.distance(bot) < sPlayerbotAIConfig->reactDistance * 2)
+    if (guidP && guidP.distance(bot) < sPlayerbotAIConfig.reactDistance * 2)
         return false;
 
     // TravelTarget* travelTarget = AI_VALUE(TravelTarget*, "travel target"); //not used, line marked for removal.
@@ -320,7 +316,7 @@ bool ChooseRpgTargetAction::isFollowValid(Player* bot, WorldPosition pos)
             inDungeon = true;
 
         if (realMaster && realMaster->IsInWorld() && realMaster->GetMap()->IsDungeon() &&
-            (realMaster->GetMapId() != pos.getMapId()))
+            (realMaster->GetMapId() != pos.GetMapId()))
             return false;
     }
 
@@ -330,17 +326,17 @@ bool ChooseRpgTargetAction::isFollowValid(Player* bot, WorldPosition pos)
     if (!botAI->HasStrategy("follow", BOT_STATE_NON_COMBAT))
         return true;
 
-    if (bot->GetDistance(groupLeader) > sPlayerbotAIConfig->rpgDistance * 2)
+    if (bot->GetDistance(groupLeader) > sPlayerbotAIConfig.rpgDistance * 2)
         return false;
 
     Formation* formation = AI_VALUE(Formation*, "formation");
-    float distance = groupLeader->GetDistance2d(pos.getX(), pos.getY());
+    float distance = groupLeader->GetDistance2d(pos.GetPositionX(), pos.GetPositionY());
 
     if (!botAI->HasActivePlayerMaster() && distance < 50.0f)
     {
         Player* player = groupLeader;
         if (groupLeader && !groupLeader->isMoving() ||
-            PAI_VALUE(WorldPosition, "last long move").distance(pos) < sPlayerbotAIConfig->reactDistance)
+            PAI_VALUE(WorldPosition, "last long move").distance(pos) < sPlayerbotAIConfig.reactDistance)
             return true;
     }
 

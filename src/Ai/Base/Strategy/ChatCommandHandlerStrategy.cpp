@@ -5,8 +5,6 @@
 
 #include "ChatCommandHandlerStrategy.h"
 
-#include "Playerbots.h"
-
 class ChatCommandActionNodeFactoryInternal : public NamedObjectFactory<ActionNode>
 {
 public:
@@ -27,6 +25,7 @@ void ChatCommandHandlerStrategy::InitTriggers(std::vector<TriggerNode*>& trigger
     PassTroughStrategy::InitTriggers(triggers);
 
     triggers.push_back(new TriggerNode("rep", { NextAction("reputation", relevance) }));
+    triggers.push_back(new TriggerNode("pvp stats", { NextAction("tell pvp stats", relevance) }));
     triggers.push_back(new TriggerNode("q", { NextAction("query quest", relevance),
                                                               NextAction("query item usage", relevance) }));
     triggers.push_back(new TriggerNode("add all loot", { NextAction("add all loot", relevance),
@@ -85,6 +84,8 @@ void ChatCommandHandlerStrategy::InitTriggers(std::vector<TriggerNode*>& trigger
     triggers.push_back(
         new TriggerNode("ready", { NextAction("ready check", relevance) }));
     triggers.push_back(
+        new TriggerNode("naxx", {NextAction("naxx chat shortcut", relevance)}));
+    triggers.push_back(
         new TriggerNode("bwl", { NextAction("bwl chat shortcut", relevance) }));
     triggers.push_back(
         new TriggerNode("dps", { NextAction("tell estimated dps", relevance) }));
@@ -116,6 +117,7 @@ ChatCommandHandlerStrategy::ChatCommandHandlerStrategy(PlayerbotAI* botAI) : Pas
     supported.push_back("stats");
     supported.push_back("leave");
     supported.push_back("reputation");
+    supported.push_back("tell pvp stats");
     supported.push_back("log");
     supported.push_back("los");
     supported.push_back("rpg status");
@@ -158,6 +160,13 @@ ChatCommandHandlerStrategy::ChatCommandHandlerStrategy(PlayerbotAI* botAI) : Pas
     supported.push_back("save mana");
     supported.push_back("formation");
     supported.push_back("stance");
+    supported.push_back("cancel tree form");
+    supported.push_back("cancel travel form");
+    supported.push_back("cancel bear form");
+    supported.push_back("cancel dire bear form");
+    supported.push_back("cancel cat form");
+    supported.push_back("cancel moonkin form");
+    supported.push_back("cancel aquatic form");
     supported.push_back("sendmail");
     supported.push_back("mail");
     supported.push_back("outfit");

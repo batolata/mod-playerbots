@@ -8,14 +8,14 @@
 #include "Event.h"
 #include "ItemCountValue.h"
 #include "ItemVisitors.h"
-#include "Playerbots.h"
+#include "PlayerbotAI.h"
 
 bool TradeAction::Execute(Event event)
 {
     std::string const text = event.getParam();
 
     // If text starts with any excluded prefix, don't process it further.
-    for (auto const& prefix : sPlayerbotAIConfig->tradeActionExcludedPrefixes)
+    for (auto const& prefix : sPlayerbotAIConfig.tradeActionExcludedPrefixes)
     {
         if (text.find(prefix) == 0)
             return false;
@@ -106,9 +106,7 @@ bool TradeAction::TradeItem(Item const* item, int8 slot)
         for (uint8 i = 0; i < TRADE_SLOT_TRADED_COUNT && tradeSlot == -1; i++)
         {
             if (pTrade->GetItem(TradeSlots(i)) == nullptr)
-            {
                 tradeSlot = i;
-            }
         }
     }
 

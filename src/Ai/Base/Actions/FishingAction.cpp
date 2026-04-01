@@ -246,7 +246,7 @@ WorldPosition FindFishingHole(PlayerbotAI* botAI)
     return WorldPosition();
 }
 
-bool MoveNearWaterAction::Execute(Event event)
+bool MoveNearWaterAction::Execute(Event /*event*/)
 {
     WorldPosition landSpot = AI_VALUE(WorldPosition, "fishing spot");
     if (landSpot.IsValid())
@@ -262,7 +262,7 @@ bool MoveNearWaterAction::isUseful()
     FishingSpotValue* fishingSpotValueObject = (FishingSpotValue*)context->GetValue<WorldPosition>("fishing spot");
     WorldPosition pos = fishingSpotValueObject->Get();
     return !pos.IsValid() || fishingSpotValueObject->IsStale(FISHING_LOCATION_TIMEOUT) ||
-           bot->GetExactDist(&pos) < 0.1f;
+           bot->GetExactDist(&pos) > 0.1f;
 
 }
 
@@ -272,9 +272,9 @@ bool MoveNearWaterAction::isPossible()
     float fishingSearchWindow;
 
     if (master)
-        fishingSearchWindow = sPlayerbotAIConfig->fishingDistanceFromMaster;
+        fishingSearchWindow = sPlayerbotAIConfig.fishingDistanceFromMaster;
     else
-        fishingSearchWindow = sPlayerbotAIConfig->fishingDistance;
+        fishingSearchWindow = sPlayerbotAIConfig.fishingDistance;
 
     WorldPosition fishingHole = FindFishingHole(botAI);
 
@@ -292,7 +292,6 @@ bool MoveNearWaterAction::isPossible()
         // Water spot is out of range, lets look for a spot to move to for the fishing hole.
         if (distance > MAX_DISTANCE_TO_WATER || distance < MIN_DISTANCE_TO_WATER)
         {
-            float angle = bot->GetAngle(fishingHole.GetPositionX(), fishingHole.GetPositionY());
             WorldPosition landSpot = FindLandRadialFromPosition(botAI, fishingHole, MIN_DISTANCE_TO_WATER, MAX_DISTANCE_TO_WATER, SEARCH_INCREMENT, fishingSearchWindow, 32);
             if (landSpot.IsValid())
             {
@@ -323,7 +322,6 @@ bool MoveNearWaterAction::isPossible()
     if (!water.IsValid())
         return false;
 
-    bool hasLOS = bot->IsWithinLOS(water.GetPositionX(), water.GetPositionY(), water.GetPositionZ());
     float angle = bot->GetAngle(water.GetPositionX(), water.GetPositionY());
     WorldPosition landSpot =
         FindLandFromPosition(botAI, 0.0f, MAX_DISTANCE_TO_WATER, 1.0f, angle, water, fishingSearchWindow, false);
@@ -336,7 +334,7 @@ bool MoveNearWaterAction::isPossible()
     return false;
 }
 
-bool EquipFishingPoleAction::Execute(Event event)
+bool EquipFishingPoleAction::Execute(Event /*event*/)
 {
     if (!_pole)
         return false;
@@ -385,7 +383,7 @@ bool EquipFishingPoleAction::isUseful()
         }
     }
 
-    if (sRandomPlayerbotMgr->IsRandomBot(bot))
+    if (sRandomPlayerbotMgr.IsRandomBot(bot))
     {
         bot->StoreNewItemInBestSlots(FISHING_POLE, 1);  // Try to get a fishing pole
         return true;
@@ -396,7 +394,7 @@ bool EquipFishingPoleAction::isUseful()
         return false;
 
     std::string masterName = master->GetName();
-    std::string text = sPlayerbotTextMgr->GetBotTextOrDefault(
+    std::string text = PlayerbotTextMgr::instance().GetBotTextOrDefault(
     "no_fishing_pole_error", "I don't have a Fishing Pole",{});
     botAI->Whisper(text, masterName);
 
@@ -463,7 +461,7 @@ bool UseBobberAction::isUseful()
     return AI_VALUE(bool, "can use fishing bobber");
 }
 
-bool UseBobberAction::Execute(Event event)
+bool UseBobberAction::Execute(Event /*event*/)
 {
     GuidVector gos = AI_VALUE(GuidVector, "nearest game objects no los");
     for (auto const& guid : gos)
@@ -485,7 +483,7 @@ bool UseBobberAction::Execute(Event event)
     return false;
 }
 
-bool EndMasterFishingAction::Execute(Event event)
+bool EndMasterFishingAction::Execute(Event /*event*/)
 {
     botAI->ChangeStrategy("-master fishing", BOT_STATE_NON_COMBAT);
     return true;
@@ -499,11 +497,11 @@ bool EndMasterFishingAction::isUseful()
         return false;
 
     WorldPosition nearWater = FindWaterRadial(bot, bot->GetPositionX(), bot->GetPositionY(), bot->GetPositionZ(),
-        bot->GetMap(), bot->GetPhaseMask(), MIN_DISTANCE_TO_WATER, sPlayerbotAIConfig->endFishingWithMaster, 10.0f);
+        bot->GetMap(), bot->GetPhaseMask(), MIN_DISTANCE_TO_WATER, sPlayerbotAIConfig.endFishingWithMaster, 10.0f);
     return !nearWater.IsValid();
 }
 
-bool RemoveBobberStrategyAction::Execute(Event event)
+bool RemoveBobberStrategyAction::Execute(Event /*event*/)
 {
     botAI->ChangeStrategy("-use bobber", BOT_STATE_NON_COMBAT);
     return true;

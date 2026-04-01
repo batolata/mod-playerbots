@@ -49,18 +49,16 @@ bool DrinkAction::Execute(Event event)
 
 bool DrinkAction::isUseful()
 {
-    return UseItemAction::isUseful() &&
-        AI_VALUE2(bool, "has mana", "self target") &&
-        AI_VALUE2(uint8, "mana", "self target") < 100;
+    return UseItemAction::isUseful() && AI_VALUE2(bool, "has mana", "self target") &&
+           AI_VALUE2(uint8, "mana", "self target") < 100;
 }
 
 bool DrinkAction::isPossible()
 {
-    return !bot->IsInCombat() &&
-        !bot->IsMounted() &&
-        !botAI->HasAnyAuraOf(GetTarget(), "dire bear form", "bear form", "cat form", "travel form",
-            "aquatic form","flight form", "swift flight form", nullptr) &&
-        (botAI->HasCheat(BotCheatMask::food) || UseItemAction::isPossible());
+    return !bot->IsInCombat() && !bot->IsMounted() &&
+           !botAI->HasAnyAuraOf(GetTarget(), "dire bear form", "bear form", "cat form", "travel form", "aquatic form",
+                                "flight form", "swift flight form", nullptr) &&
+           (botAI->HasCheat(BotCheatMask::food) || UseItemAction::isPossible());
 }
 
 bool EatAction::Execute(Event event)
@@ -76,7 +74,7 @@ bool EatAction::Execute(Event event)
         if (bot->isMoving())
         {
             bot->StopMoving();
-            // botAI->SetNextCheckDelay(sPlayerbotAIConfig->globalCoolDown);
+            // botAI->SetNextCheckDelay(sPlayerbotAIConfig.globalCoolDown);
             // return false;
         }
 
@@ -102,17 +100,12 @@ bool EatAction::Execute(Event event)
     return UseItemAction::Execute(event);
 }
 
-bool EatAction::isUseful()
-{
-    return UseItemAction::isUseful() &&
-        AI_VALUE2(uint8, "health", "self target") < 100;
-}
+bool EatAction::isUseful() { return UseItemAction::isUseful() && AI_VALUE2(uint8, "health", "self target") < 100; }
 
 bool EatAction::isPossible()
 {
-    return !bot->IsInCombat() &&
-        !bot->IsMounted() &&
-        !botAI->HasAnyAuraOf(GetTarget(), "dire bear form", "bear form", "cat form", "travel form",
-            "aquatic form","flight form", "swift flight form", nullptr) &&
-        (botAI->HasCheat(BotCheatMask::food) || UseItemAction::isPossible());
+    return !bot->IsInCombat() && !bot->IsMounted() &&
+           !botAI->HasAnyAuraOf(GetTarget(), "dire bear form", "bear form", "cat form", "travel form", "aquatic form",
+                                "flight form", "swift flight form", nullptr) &&
+           (botAI->HasCheat(BotCheatMask::food) || UseItemAction::isPossible());
 }

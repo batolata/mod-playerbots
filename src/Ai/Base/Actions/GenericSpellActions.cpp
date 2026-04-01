@@ -17,19 +17,17 @@
 #include "WorldPacket.h"
 #include "Group.h"
 #include "Chat.h"
-#include "Language.h"
 #include "GenericBuffUtils.h"
 #include "PlayerbotAI.h"
 
 using ai::buff::MakeAuraQualifierForBuff;
-using ai::buff::UpgradeToGroupIfAppropriate;
 
 CastSpellAction::CastSpellAction(PlayerbotAI* botAI, std::string const spell)
     : Action(botAI, spell), range(botAI->GetRange("spell")), spell(spell)
 {
 }
 
-bool CastSpellAction::Execute(Event event)
+bool CastSpellAction::Execute(Event /*event*/)
 {
     if (spell == "conjure food" || spell == "conjure water")
     {
@@ -78,34 +76,6 @@ bool CastSpellAction::Execute(Event event)
     return botAI->CastSpell(spell, GetTarget());
 }
 
-bool CastSpellAction::isPossible()
-{
-    if (botAI->IsInVehicle() && !botAI->IsInVehicle(false, false, true))
-    {
-        if (!sPlayerbotAIConfig->logInGroupOnly || (bot->GetGroup() && botAI->HasRealPlayerMaster()))
-        {
-            LOG_DEBUG("playerbots", "Can cast spell failed. Vehicle. - bot name: {}", bot->GetName());
-        }
-        return false;
-    }
-
-    if (spell == "mount" && !bot->IsMounted() && !bot->IsInCombat())
-        return true;
-
-    if (spell == "mount" && bot->IsInCombat())
-    {
-        if (!sPlayerbotAIConfig->logInGroupOnly || (bot->GetGroup() && botAI->HasRealPlayerMaster()))
-        {
-            LOG_DEBUG("playerbots", "Can cast spell failed. Mount. - bot name: {}", bot->GetName());
-        }
-        bot->Dismount();
-        return false;
-    }
-
-    // Spell* currentSpell = bot->GetCurrentSpell(CURRENT_GENERIC_SPELL); //not used, line marked for removal.
-    return botAI->CanCastSpell(spell, GetTarget());
-}
-
 bool CastSpellAction::isUseful()
 {
     if (botAI->IsInVehicle() && !botAI->IsInVehicle(false, false, true))
@@ -127,13 +97,40 @@ bool CastSpellAction::isUseful()
     if (!spellTarget->IsInWorld() || spellTarget->GetMapId() != bot->GetMapId())
         return false;
 
-    // float combatReach = bot->GetCombatReach() + spellTarget->GetCombatReach();
+    // float combatReach = bot->GetCombatReach() + target->GetCombatReach();
     // if (!botAI->IsRanged(bot))
     //     combatReach += 4.0f / 3.0f;
 
-    return spellTarget &&
-           AI_VALUE2(bool, "spell cast useful",
-                     spell);  // && sServerFacade->GetDistance2d(bot, spellTarget) <= (range + combatReach);
+    return AI_VALUE2(bool, "spell cast useful", spell);
+           // && ServerFacade::instance().GetDistance2d(bot, target) <= (range + combatReach);
+}
+
+bool CastSpellAction::isPossible()
+{
+    if (botAI->IsInVehicle() && !botAI->IsInVehicle(false, false, true))
+    {
+        if (!sPlayerbotAIConfig.logInGroupOnly || (bot->GetGroup() && botAI->HasRealPlayerMaster()))
+        {
+            LOG_DEBUG("playerbots", "Can cast spell failed. Vehicle. - bot name: {}", bot->GetName());
+        }
+        return false;
+    }
+
+    if (spell == "mount" && !bot->IsMounted() && !bot->IsInCombat())
+        return true;
+
+    if (spell == "mount" && bot->IsInCombat())
+    {
+        if (!sPlayerbotAIConfig.logInGroupOnly || (bot->GetGroup() && botAI->HasRealPlayerMaster()))
+        {
+            LOG_DEBUG("playerbots", "Can cast spell failed. Mount. - bot name: {}", bot->GetName());
+        }
+        bot->Dismount();
+        return false;
+    }
+
+    // Spell* currentSpell = bot->GetCurrentSpell(CURRENT_GENERIC_SPELL); //not used, line marked for removal.
+    return botAI->CanCastSpell(spell, GetTarget());
 }
 
 CastMeleeSpellAction::CastMeleeSpellAction(PlayerbotAI* botAI, std::string const spell) : CastSpellAction(botAI, spell)
@@ -233,7 +230,7 @@ Value<Unit*>* BuffOnPartyAction::GetTargetValue()
     return context->GetValue<Unit*>("party member without aura", MakeAuraQualifierForBuff(spell));
 }
 
-bool BuffOnPartyAction::Execute(Event event)
+bool BuffOnPartyAction::Execute(Event /*event*/)
 {
     std::string castName = spell; // default = mono
 
@@ -290,7 +287,7 @@ Value<Unit*>* CastSnareSpellAction::GetTargetValue() { return context->GetValue<
 
 Value<Unit*>* CastCrowdControlSpellAction::GetTargetValue() { return context->GetValue<Unit*>("cc target", getName()); }
 
-bool CastCrowdControlSpellAction::Execute(Event event) { return botAI->CastSpell(getName(), GetTarget()); }
+bool CastCrowdControlSpellAction::Execute(Event /*event*/) { return botAI->CastSpell(getName(), GetTarget()); }
 
 bool CastCrowdControlSpellAction::isPossible() { return botAI->CanCastSpell(getName(), GetTarget()); }
 
@@ -308,13 +305,37 @@ bool CastVehicleSpellAction::isPossible()
 
 bool CastVehicleSpellAction::isUseful() { return botAI->IsInVehicle(false, true); }
 
-bool CastVehicleSpellAction::Execute(Event event)
+bool CastVehicleSpellAction::Execute(Event /*event*/)
 {
     uint32 spellId = AI_VALUE2(uint32, "vehicle spell id", spell);
     return botAI->CastVehicleSpell(spellId, GetTarget());
 }
 
-bool UseTrinketAction::Execute(Event event)
+bool CastEveryManForHimselfAction::isPossible()
+{
+    uint32 spellId = AI_VALUE2(uint32, "spell id", spell);
+    if (!spellId)
+        return false;
+
+    if (!bot->HasSpell(spellId))
+        return false;
+
+    if (bot->HasSpellCooldown(spellId))
+        return false;
+
+    return true;
+}
+
+bool CastEveryManForHimselfAction::isUseful()
+{
+    return bot->HasAuraType(SPELL_AURA_MOD_STUN) ||
+           bot->HasAuraType(SPELL_AURA_MOD_FEAR) ||
+           bot->HasAuraType(SPELL_AURA_MOD_ROOT) ||
+           bot->HasAuraType(SPELL_AURA_MOD_CONFUSE) ||
+           bot->HasAuraType(SPELL_AURA_MOD_CHARM);
+}
+
+bool UseTrinketAction::Execute(Event /*event*/)
 {
     Item* trinket1 = bot->GetItemByPos(INVENTORY_SLOT_BAG_0, EQUIPMENT_SLOT_TRINKET1);
 

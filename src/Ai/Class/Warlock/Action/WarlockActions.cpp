@@ -25,7 +25,7 @@ const int ITEM_SOUL_SHARD = 6265;
 bool CastDrainSoulAction::isUseful() { return AI_VALUE2(uint32, "item count", "soul shard") < 26; }
 
 // Checks if the bot's health is above a certain threshold, and if so, allows casting Life Tap
-bool CastLifeTapAction::isUseful() { return AI_VALUE2(uint8, "health", "self target") > sPlayerbotAIConfig->lowHealth; }
+bool CastLifeTapAction::isUseful() { return AI_VALUE2(uint8, "health", "self target") > sPlayerbotAIConfig.lowHealth; }
 
 // Checks if the target marked with the moon icon can be banished
 bool CastBanishOnCcAction::isPossible()
@@ -116,7 +116,7 @@ bool CastSoulshatterAction::isUseful()
 }
 
 // Checks if the bot has enough bag space to create a soul shard, then does so
-bool CreateSoulShardAction::Execute(Event event)
+bool CreateSoulShardAction::Execute(Event /*event*/)
 {
     Player* bot = botAI->GetBot();
     if (!bot)
@@ -188,7 +188,7 @@ bool CastCreateSoulstoneAction::isUseful()
     return hasSpace;
 }
 
-bool DestroySoulShardAction::Execute(Event event)
+bool DestroySoulShardAction::Execute(Event /*event*/)
 {
     // Look for the first soul shard in any bag and destroy it
     for (int i = INVENTORY_SLOT_BAG_START; i < INVENTORY_SLOT_BAG_END; ++i)
@@ -234,7 +234,7 @@ static bool HasSoulstoneAura(Unit* unit)
 }
 
 // Use the soulstone item on the bot itself with nc strategy "ss self"
-bool UseSoulstoneSelfAction::Execute(Event event)
+bool UseSoulstoneSelfAction::Execute(Event /*event*/)
 {
     std::vector<Item*> items = AI_VALUE2(std::vector<Item*>, "inventory items", "soulstone");
     if (items.empty())
@@ -266,7 +266,7 @@ void CleanupSoulstoneReservations()
 }
 
 // Use the soulstone item on the bot's master with nc strategy "ss master"
-bool UseSoulstoneMasterAction::Execute(Event event)
+bool UseSoulstoneMasterAction::Execute(Event /*event*/)
 {
     CleanupSoulstoneReservations();
 
@@ -288,7 +288,7 @@ bool UseSoulstoneMasterAction::Execute(Event event)
         soulstoneReservations[master->GetGUID()] = now + 2500;  // Reserve for 2.5 seconds
     }
 
-    float distance = sServerFacade->GetDistance2d(bot, master);
+    float distance = ServerFacade::instance().GetDistance2d(bot, master);
     if (distance >= 30.0f)
         return false;
 
@@ -300,7 +300,7 @@ bool UseSoulstoneMasterAction::Execute(Event event)
 }
 
 // Use the soulstone item on a tank in the group with nc strategy "ss tank"
-bool UseSoulstoneTankAction::Execute(Event event)
+bool UseSoulstoneTankAction::Execute(Event /*event*/)
 {
     CleanupSoulstoneReservations();
 
@@ -325,7 +325,7 @@ bool UseSoulstoneTankAction::Execute(Event event)
                 if (soulstoneReservations.count(member->GetGUID()) && soulstoneReservations[member->GetGUID()] > now)
                     continue;  // Already being soulstoned
 
-                float distance = sServerFacade->GetDistance2d(bot, member);
+                float distance = ServerFacade::instance().GetDistance2d(bot, member);
                 if (distance < 30.0f && bot->IsWithinLOSInMap(member))
                 {
                     chosenTank = member;
@@ -348,7 +348,7 @@ bool UseSoulstoneTankAction::Execute(Event event)
                         soulstoneReservations[member->GetGUID()] > now)
                         continue;  // Already being soulstoned
 
-                    float distance = sServerFacade->GetDistance2d(bot, member);
+                    float distance = ServerFacade::instance().GetDistance2d(bot, member);
                     if (distance < 30.0f && bot->IsWithinLOSInMap(member))
                     {
                         chosenTank = member;
@@ -368,7 +368,7 @@ bool UseSoulstoneTankAction::Execute(Event event)
 }
 
 // Use the soulstone item on a healer in the group with nc strategy "ss healer"
-bool UseSoulstoneHealerAction::Execute(Event event)
+bool UseSoulstoneHealerAction::Execute(Event /*event*/)
 {
     CleanupSoulstoneReservations();
 
@@ -392,7 +392,7 @@ bool UseSoulstoneHealerAction::Execute(Event event)
                         soulstoneReservations[member->GetGUID()] > now)
                         continue;  // Already being soulstoned
 
-                    float distance = sServerFacade->GetDistance2d(bot, member);
+                    float distance = ServerFacade::instance().GetDistance2d(bot, member);
                     if (distance < 30.0f && bot->IsWithinLOSInMap(member))
                     {
                         healer = member;
@@ -425,7 +425,7 @@ CastCreateFirestoneAction::CastCreateFirestoneAction(PlayerbotAI* botAI)
 {
 }
 
-bool CastCreateFirestoneAction::Execute(Event event)
+bool CastCreateFirestoneAction::Execute(Event /*event*/)
 {
     for (uint32 spellId : firestoneSpellIds)
     {

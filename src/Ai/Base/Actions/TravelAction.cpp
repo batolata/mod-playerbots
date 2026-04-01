@@ -10,7 +10,7 @@
 #include "GridNotifiersImpl.h"
 #include "Playerbots.h"
 
-bool TravelAction::Execute(Event event)
+bool TravelAction::Execute(Event /*event*/)
 {
     TravelTarget* target = AI_VALUE(TravelTarget*, "travel target");
 
@@ -21,9 +21,9 @@ bool TravelAction::Execute(Event event)
 
     Unit* newTarget = nullptr;
     std::list<Unit*> targets;
-    Acore::AnyUnitInObjectRangeCheck u_check(bot, sPlayerbotAIConfig->sightDistance * 2);
+    Acore::AnyUnitInObjectRangeCheck u_check(bot, sPlayerbotAIConfig.sightDistance * 2);
     Acore::UnitListSearcher<Acore::AnyUnitInObjectRangeCheck> searcher(bot, targets, u_check);
-    Cell::VisitObjects(bot, searcher, sPlayerbotAIConfig->sightDistance);
+    Cell::VisitObjects(bot, searcher, sPlayerbotAIConfig.sightDistance);
 
     for (Unit* unit : targets)
     {
@@ -60,12 +60,14 @@ bool TravelAction::isUseful()
            (!AI_VALUE(GuidPosition, "rpg target") || !AI_VALUE(ObjectGuid, "pull target"));
 }
 
-bool MoveToDarkPortalAction::Execute(Event event)
+bool MoveToDarkPortalAction::Execute(Event /*event*/)
 {
     if (bot->GetGroup())
+    {
         if (bot->GetGroup()->GetLeaderGUID() != bot->GetGUID() &&
             !GET_PLAYERBOT_AI(GET_PLAYERBOT_AI(bot)->GetGroupLeader()))
             return false;
+    }
 
     if (bot->GetLevel() > 57)
     {
@@ -77,7 +79,7 @@ bool MoveToDarkPortalAction::Execute(Event event)
                 if (bot->GetTeamId() == TEAM_ALLIANCE)
                 {
                     Quest const* quest = sObjectMgr->GetQuestTemplate(10119);
-                    CreatureData const* creatureData = sRandomPlayerbotMgr->GetCreatureDataByEntry(16841);
+                    CreatureData const* creatureData = sRandomPlayerbotMgr.GetCreatureDataByEntry(16841);
                     if (quest && creatureData)
                     {
                         auto creatureBounds =
@@ -89,7 +91,7 @@ bool MoveToDarkPortalAction::Execute(Event event)
                 else
                 {
                     Quest const* quest = sObjectMgr->GetQuestTemplate(9407);
-                    CreatureData const* creatureData = sRandomPlayerbotMgr->GetCreatureDataByEntry(19254);
+                    CreatureData const* creatureData = sRandomPlayerbotMgr.GetCreatureDataByEntry(19254);
                     if (quest && creatureData)
                     {
                         auto creatureBounds =
@@ -111,7 +113,7 @@ bool MoveToDarkPortalAction::Execute(Event event)
 
 bool MoveToDarkPortalAction::isUseful() { return bot->GetLevel() > 54; }
 
-bool DarkPortalAzerothAction::Execute(Event event)
+bool DarkPortalAzerothAction::Execute(Event /*event*/)
 {
     if (bot->GetLevel() > 57)
     {
@@ -126,14 +128,12 @@ bool DarkPortalAzerothAction::Execute(Event event)
 
 bool DarkPortalAzerothAction::isUseful() { return bot->GetLevel() > 57; }
 
-bool MoveFromDarkPortalAction::Execute(Event event)
+bool MoveFromDarkPortalAction::Execute(Event /*event*/)
 {
     RESET_AI_VALUE(GuidPosition, "rpg target");
 
     if (bot->GetTeamId() == TEAM_ALLIANCE)
         return MoveTo(530, -319.261f, 1027.213, 54.172638f, false, true);
-    else
-        return MoveTo(530, -180.444f, 1027.947, 54.181538f, false, true);
 
-    return false;
+    return MoveTo(530, -180.444f, 1027.947, 54.181538f, false, true);
 }

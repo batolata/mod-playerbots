@@ -7,6 +7,7 @@
 #define _PLAYERBOT_VALUECONTEXT_H
 
 #include "ActiveSpellValue.h"
+#include "AggressiveTargetValue.h"
 #include "AlwaysLootListValue.h"
 #include "AoeHealValues.h"
 #include "AoeValues.h"
@@ -51,6 +52,7 @@
 #include "LineTargetValue.h"
 #include "LogLevelValue.h"
 #include "LootStrategyValue.h"
+#include "LootValues.h"
 #include "MaintenanceValues.h"
 #include "ManaSaveLevelValue.h"
 #include "NearestAdsValue.h"
@@ -143,6 +145,7 @@ public:
         creators["pet target"] = &ValueContext::pet_target;
         creators["old target"] = &ValueContext::old_target;
         creators["grind target"] = &ValueContext::grind_target;
+        creators["aggressive target"] = &ValueContext::aggressive_target;
         creators["rti target"] = &ValueContext::rti_target;
         creators["rti cc target"] = &ValueContext::rti_cc_target;
         creators["duel target"] = &ValueContext::duel_target;
@@ -216,6 +219,7 @@ public:
         creators["formation"] = &ValueContext::formation;
         creators["stance"] = &ValueContext::stance;
         creators["item usage"] = &ValueContext::item_usage;
+        creators["item upgrade"] = &ValueContext::item_upgrade;
         creators["speed"] = &ValueContext::speed;
         creators["last said"] = &ValueContext::last_said;
         creators["last emote"] = &ValueContext::last_emote;
@@ -271,6 +275,7 @@ public:
         creators["can repair"] = &ValueContext::can_repair;
         creators["should sell"] = &ValueContext::should_sell;
         creators["can sell"] = &ValueContext::can_sell;
+        creators["can train"] = &ValueContext::can_train;
         creators["can fight equal"] = &ValueContext::can_fight_equal;
         creators["can fight elite"] = &ValueContext::can_fight_elite;
         creators["can fight boss"] = &ValueContext::can_fight_boss;
@@ -341,6 +346,7 @@ private:
     static UntypedValue* already_seen_players(PlayerbotAI* botAI) { return new AlreadySeenPlayersValue(botAI); }
     static UntypedValue* new_player_nearby(PlayerbotAI* botAI) { return new NewPlayerNearbyValue(botAI); }
     static UntypedValue* item_usage(PlayerbotAI* botAI) { return new ItemUsageValue(botAI); }
+    static UntypedValue* item_upgrade(PlayerbotAI* botAI) { return new ItemUpgradeValue(botAI); }
     static UntypedValue* formation(PlayerbotAI* botAI) { return new FormationValue(botAI); }
     static UntypedValue* stance(PlayerbotAI* botAI) { return new StanceValue(botAI); }
     static UntypedValue* mana_save_level(PlayerbotAI* botAI) { return new ManaSaveLevelValue(botAI); }
@@ -396,7 +402,7 @@ private:
     static UntypedValue* nearest_game_objects(PlayerbotAI* botAI) { return new NearestGameObjects(botAI); }
     static UntypedValue* nearest_game_objects_no_los(PlayerbotAI* botAI)
     {
-        return new NearestGameObjects(botAI, sPlayerbotAIConfig->sightDistance, true);
+        return new NearestGameObjects(botAI, sPlayerbotAIConfig.sightDistance, true);
     }
     static UntypedValue* closest_game_objects(PlayerbotAI* botAI)
     {
@@ -422,7 +428,7 @@ private:
     static UntypedValue* possible_triggers(PlayerbotAI* botAI) { return new PossibleTriggersValue(botAI); }
     static UntypedValue* possible_targets_no_los(PlayerbotAI* botAI)
     {
-        return new PossibleTargetsValue(botAI, "possible targets", sPlayerbotAIConfig->sightDistance, true);
+        return new PossibleTargetsValue(botAI, "possible targets", sPlayerbotAIConfig.sightDistance, true);
     }
     static UntypedValue* possible_adds(PlayerbotAI* botAI) { return new PossibleAddsValue(botAI); }
     static UntypedValue* prioritized_targets(PlayerbotAI* botAI) { return new PrioritizedTargetsValue(botAI); }
@@ -455,6 +461,7 @@ private:
     static UntypedValue* current_cc_target(PlayerbotAI* botAI) { return new CurrentCcTargetValue(botAI); }
     static UntypedValue* pet_target(PlayerbotAI* botAI) { return new PetTargetValue(botAI); }
     static UntypedValue* grind_target(PlayerbotAI* botAI) { return new GrindTargetValue(botAI); }
+    static UntypedValue* aggressive_target(PlayerbotAI* botAI) { return new AggressiveTargetValue(botAI); }
     static UntypedValue* rti_target(PlayerbotAI* botAI) { return new RtiTargetValue(botAI); }
     static UntypedValue* rti_cc_target(PlayerbotAI* botAI) { return new RtiCcTargetValue(botAI); }
     static UntypedValue* duel_target(PlayerbotAI* botAI) { return new DuelTargetValue(botAI); }
@@ -517,6 +524,7 @@ private:
     static UntypedValue* can_repair(PlayerbotAI* botAI) { return new CanRepairValue(botAI); }
     static UntypedValue* should_sell(PlayerbotAI* botAI) { return new ShouldSellValue(botAI); }
     static UntypedValue* can_sell(PlayerbotAI* botAI) { return new CanSellValue(botAI); }
+    static UntypedValue* can_train(PlayerbotAI* botAI) { return new CanTrainValue(botAI); }
     static UntypedValue* can_fight_equal(PlayerbotAI* botAI) { return new CanFightEqualValue(botAI); }
     static UntypedValue* can_fight_elite(PlayerbotAI* botAI) { return new CanFightEliteValue(botAI); }
     static UntypedValue* can_fight_boss(PlayerbotAI* botAI) { return new CanFightBossValue(botAI); }

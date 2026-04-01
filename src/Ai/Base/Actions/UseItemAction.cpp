@@ -7,9 +7,9 @@
 
 #include "ChatHelper.h"
 #include "Event.h"
+#include "ItemPackets.h"
 #include "ItemUsageValue.h"
 #include "Playerbots.h"
-#include "ItemPackets.h"
 
 bool UseItemAction::Execute(Event event)
 {
@@ -69,7 +69,6 @@ bool UseItemAction::UseItem(Item* item, ObjectGuid goGuid, Item* itemTarget, Uni
 
     uint8 bagIndex = item->GetBagSlot();
     uint8 slot = item->GetSlot();
-    uint8 spell_index = 0;
     uint8 cast_count = 1;
     ObjectGuid item_guid = item->GetGUID();
     uint32 glyphIndex = 0;
@@ -187,7 +186,7 @@ bool UseItemAction::UseItem(Item* item, ObjectGuid goGuid, Item* itemTarget, Uni
     if (bot->isMoving())
     {
         bot->StopMoving();
-        botAI->SetNextCheckDelay(sPlayerbotAIConfig->globalCoolDown);
+        botAI->SetNextCheckDelay(sPlayerbotAIConfig.globalCoolDown);
         return false;
     }
 
@@ -229,7 +228,7 @@ bool UseItemAction::UseItem(Item* item, ObjectGuid goGuid, Item* itemTarget, Uni
                 out << " on " << chat->FormatItem(itemForSpell->GetTemplate());
             }
             uint32 castTime = spellInfo->CalcCastTime();
-            botAI->SetNextCheckDelay(castTime + sPlayerbotAIConfig->reactDelay);
+            botAI->SetNextCheckDelay(castTime + sPlayerbotAIConfig.reactDelay);
         }
 
         break;
@@ -307,7 +306,7 @@ bool UseItemAction::UseItem(Item* item, ObjectGuid goGuid, Item* itemTarget, Uni
     if (!spellId)
         return false;
 
-    // botAI->SetNextCheckDelay(sPlayerbotAIConfig->globalCoolDown);
+    // botAI->SetNextCheckDelay(sPlayerbotAIConfig.globalCoolDown);
     botAI->TellMasterNoFacing(out.str());
     bot->GetSession()->HandleUseItemOpcode(packet);
     return true;
@@ -416,14 +415,7 @@ bool UseHearthStone::Execute(Event event)
 
 bool UseHearthStone::isUseful() { return !bot->InBattleground(); }
 
-bool UseRandomRecipe::isUseful()
-{
-    return !bot->IsInCombat() && !botAI->HasActivePlayerMaster() && !bot->InBattleground();
-}
-
-bool UseRandomRecipe::isPossible() { return AI_VALUE2(uint32, "item count", "recipe") > 0; }
-
-bool UseRandomRecipe::Execute(Event event)
+bool UseRandomRecipe::Execute(Event /*event*/)
 {
     std::vector<Item*> recipes = AI_VALUE2(std::vector<Item*>, "inventory items", "recipe");
 
@@ -445,14 +437,14 @@ bool UseRandomRecipe::Execute(Event event)
     return used;
 }
 
-bool UseRandomQuestItem::isUseful()
+bool UseRandomRecipe::isUseful()
 {
-    return !botAI->HasActivePlayerMaster() && !bot->InBattleground() && !bot->HasUnitState(UNIT_STATE_IN_FLIGHT);
+    return !bot->IsInCombat() && !botAI->HasActivePlayerMaster() && !bot->InBattleground();
 }
 
-bool UseRandomQuestItem::isPossible() { return AI_VALUE2(uint32, "item count", "quest") > 0; }
+bool UseRandomRecipe::isPossible() { return AI_VALUE2(uint32, "item count", "recipe") > 0; }
 
-bool UseRandomQuestItem::Execute(Event event)
+bool UseRandomQuestItem::Execute(Event /*event*/)
 {
     Unit* unitTarget = nullptr;
     ObjectGuid goTarget;
@@ -478,7 +470,6 @@ bool UseRandomQuestItem::Execute(Event event)
                 break;
             }
         }
-
     }
 
     if (!item)
@@ -486,7 +477,14 @@ bool UseRandomQuestItem::Execute(Event event)
 
     bool used = UseItem(item, goTarget, nullptr, unitTarget);
     if (used)
-        botAI->SetNextCheckDelay(sPlayerbotAIConfig->globalCoolDown);
+        botAI->SetNextCheckDelay(sPlayerbotAIConfig.globalCoolDown);
 
     return used;
 }
+
+bool UseRandomQuestItem::isUseful()
+{
+    return !botAI->HasActivePlayerMaster() && !bot->InBattleground() && !bot->HasUnitState(UNIT_STATE_IN_FLIGHT);
+}
+
+bool UseRandomQuestItem::isPossible() { return AI_VALUE2(uint32, "item count", "quest") > 0; }

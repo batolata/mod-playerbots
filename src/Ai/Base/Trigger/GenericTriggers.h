@@ -216,7 +216,7 @@ public:
 class AttackerCountTrigger : public Trigger
 {
 public:
-    AttackerCountTrigger(PlayerbotAI* botAI, int32 amount, float distance = sPlayerbotAIConfig->sightDistance)
+    AttackerCountTrigger(PlayerbotAI* botAI, int32 amount, float distance = sPlayerbotAIConfig.sightDistance)
         : Trigger(botAI), amount(amount), distance(distance)
     {
     }
@@ -746,6 +746,14 @@ public:
     bool IsActive() override;
 };
 
+class LossOfControlTrigger : public Trigger
+{
+public:
+    LossOfControlTrigger(PlayerbotAI* botAI) : Trigger(botAI, "loss of control", 1) {}
+
+    bool IsActive() override;
+};
+
 class IsSwimmingTrigger : public Trigger
 {
 public:
@@ -836,7 +844,7 @@ private:
 class SitTrigger : public StayTimeTrigger
 {
 public:
-    SitTrigger(PlayerbotAI* botAI) : StayTimeTrigger(botAI, sPlayerbotAIConfig->sitDelay, "sit") {}
+    SitTrigger(PlayerbotAI* botAI) : StayTimeTrigger(botAI, sPlayerbotAIConfig.sitDelay, "sit") {}
 };
 
 class ReturnToStayPositionTrigger : public Trigger
@@ -850,7 +858,7 @@ public:
 class ReturnTrigger : public StayTimeTrigger
 {
 public:
-    ReturnTrigger(PlayerbotAI* botAI) : StayTimeTrigger(botAI, sPlayerbotAIConfig->returnDelay, "return") {}
+    ReturnTrigger(PlayerbotAI* botAI) : StayTimeTrigger(botAI, sPlayerbotAIConfig.returnDelay, "return") {}
 };
 
 class GiveItemTrigger : public Trigger

@@ -6,13 +6,11 @@
 #ifndef _PLAYERBOT_PLAYERbotAI_H
 #define _PLAYERBOT_PLAYERbotAI_H
 
-#include <queue>
 #include <stack>
 
 #include "Chat.h"
 #include "ChatFilter.h"
 #include "ChatHelper.h"
-#include "Common.h"
 #include "CreatureData.h"
 #include "Event.h"
 #include "Item.h"
@@ -425,12 +423,12 @@ public:
     static bool IsRangedDps(Player* player, bool bySpec = false);
     static bool IsCombo(Player* player);
     static bool IsBotMainTank(Player* player);
-    static bool IsMainTank(Player* player);
+    static bool IsMainTank(Player* player, bool ignoreMemberFlag = false);
     static uint32 GetGroupTankNum(Player* player);
     static bool IsAssistTank(Player* player);
-    static bool IsAssistTankOfIndex(Player* player, int index, bool ignoreDeadPlayers = false);
-    static bool IsAssistHealOfIndex(Player* player, int index, bool ignoreDeadPlayers = false);
-    static bool IsAssistRangedDpsOfIndex(Player* player, int index, bool ignoreDeadPlayers = false);
+    static bool IsAssistTankOfIndex(Player* player, uint8 index, bool ignoreDeadPlayers = false);
+    static bool IsAssistHealOfIndex(Player* player, uint8 index, bool ignoreDeadPlayers = false);
+    static bool IsAssistRangedDpsOfIndex(Player* player, uint8 index, bool ignoreDeadPlayers = false);
     bool HasAggro(Unit* unit);
     static int32 GetAssistTankIndex(Player* player);
     int32 GetGroupSlotIndex(Player* player);
@@ -446,7 +444,8 @@ public:
     GameObject* GetGameObject(ObjectGuid guid);
     // static GameObject* GetGameObject(GameObjectData const* gameObjectData);
     WorldObject* GetWorldObject(ObjectGuid guid);
-    std::vector<Player*> GetPlayersInGroup();
+    std::vector<Player*> GetAllPlayersInGroup();
+    std::vector<Player*> GetRealPlayersInGroup();
     const AreaTableEntry* GetCurrentArea();
     const AreaTableEntry* GetCurrentZone();
     static std::string GetLocalizedAreaName(const AreaTableEntry* entry);
@@ -491,7 +490,7 @@ public:
     void ImbueItem(Item* item);
     void EnchantItemT(uint32 spellid, uint8 slot);
     uint32 GetBuffedCount(Player* player, std::string const spellname);
-    int32 GetNearGroupMemberCount(float dis = sPlayerbotAIConfig->sightDistance);
+    int32 GetNearGroupMemberCount(float dis = sPlayerbotAIConfig.sightDistance);
 
     virtual bool CanCastSpell(std::string const name, Unit* target, Item* itemTarget = nullptr);
     virtual bool CastSpell(std::string const name, Unit* target, Item* itemTarget = nullptr);
@@ -545,9 +544,9 @@ public:
     uint32 GetFixedBotNumer(uint32 maxNum = 100, float cyclePerMin = 1);
     GrouperType GetGrouperType();
     GuilderType GetGuilderType();
-    bool HasPlayerNearby(WorldPosition* pos, float range = sPlayerbotAIConfig->reactDistance);
-    bool HasPlayerNearby(float range = sPlayerbotAIConfig->reactDistance);
-    bool HasManyPlayersNearby(uint32 trigerrValue = 20, float range = sPlayerbotAIConfig->sightDistance);
+    bool HasPlayerNearby(WorldPosition* pos, float range = sPlayerbotAIConfig.reactDistance);
+    bool HasPlayerNearby(float range = sPlayerbotAIConfig.reactDistance);
+    bool HasManyPlayersNearby(uint32 trigerrValue = 20, float range = sPlayerbotAIConfig.sightDistance);
     bool AllowActive(ActivityType activityType);
     bool AllowActivity(ActivityType activityType = ALL_ACTIVITY, bool checkNow = false);
     uint32 AutoScaleActivity(uint32 mod);
@@ -557,12 +556,12 @@ public:
     bool IsSafe(WorldObject* obj);
     ChatChannelSource GetChatChannelSource(Player* bot, uint32 type, std::string channelName);
 
-    bool CheckLocationDistanceByLevel(Player* player, const WorldLocation &loc, bool fromStartUp = false);
+    bool StarterLevelDistanceCheck(Player* player, const WorldLocation &loc, bool fromStartUp = false);
 
     bool HasCheat(BotCheatMask mask)
     {
         return ((uint32)mask & (uint32)cheatMask) != 0 ||
-               ((uint32)mask & (uint32)sPlayerbotAIConfig->botCheatMask) != 0;
+               ((uint32)mask & (uint32)sPlayerbotAIConfig.botCheatMask) != 0;
     }
     BotCheatMask GetCheat() { return cheatMask; }
     void SetCheat(BotCheatMask mask) { cheatMask = mask; }

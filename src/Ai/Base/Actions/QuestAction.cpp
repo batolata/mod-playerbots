@@ -5,6 +5,7 @@
 
 #include "QuestAction.h"
 #include <sstream>
+#include <algorithm>
 
 #include "Chat.h"
 #include "ChatHelper.h"
@@ -116,7 +117,8 @@ bool QuestAction::CompleteQuest(Player* player, uint32 entry)
                 player->CastedCreatureOrGO(creature, ObjectGuid(), spell_id);
             }
         }*/
-        /*else*/ if (creature > 0)
+        /*else*/
+        if (creature > 0)
         {
             if (CreatureTemplate const* cInfo = sObjectMgr->GetCreatureTemplate(creature))
                 for (uint16 z = 0; z < creaturecount; ++z)
@@ -182,7 +184,7 @@ bool QuestAction::ProcessQuests(WorldObject* questGiver)
 {
     ObjectGuid guid = questGiver->GetGUID();
 
-    if (bot->GetDistance(questGiver) > INTERACTION_DISTANCE && !sPlayerbotAIConfig->syncQuestWithPlayer)
+    if (bot->GetDistance(questGiver) > INTERACTION_DISTANCE && !sPlayerbotAIConfig.syncQuestWithPlayer)
     {
         //if (botAI->HasStrategy("debug", BotState::BOT_STATE_COMBAT) || botAI->HasStrategy("debug", BotState::BOT_STATE_NON_COMBAT))
 
@@ -190,7 +192,7 @@ bool QuestAction::ProcessQuests(WorldObject* questGiver)
         return false;
     }
 
-    if (!bot->HasInArc(CAST_ANGLE_IN_FRONT, questGiver, sPlayerbotAIConfig->sightDistance))
+    if (!bot->HasInArc(CAST_ANGLE_IN_FRONT, questGiver, sPlayerbotAIConfig.sightDistance))
         bot->SetFacingToObject(questGiver);
 
     bot->SetTarget(guid);
@@ -238,7 +240,7 @@ bool QuestAction::AcceptQuest(Quest const* quest, ObjectGuid questGiver)
         p.rpos(0);
         bot->GetSession()->HandleQuestgiverAcceptQuestOpcode(p);
 
-        if (bot->GetQuestStatus(questId) == QUEST_STATUS_NONE && sPlayerbotAIConfig->syncQuestWithPlayer)
+        if (bot->GetQuestStatus(questId) == QUEST_STATUS_NONE && sPlayerbotAIConfig.syncQuestWithPlayer)
         {
             Object* pObject = ObjectAccessor::GetObjectByTypeMask(*bot, questGiver,
                                                                   TYPEMASK_UNIT | TYPEMASK_GAMEOBJECT | TYPEMASK_ITEM);
@@ -350,7 +352,6 @@ bool QuestUpdateAddItemAction::Execute(Event event)
     uint32 itemId, count;
     p >> itemId >> count;
 
-    Player* requester = event.getOwner() ? event.getOwner() : GetMaster();
     auto const* itemPrototype = sObjectMgr->GetItemTemplate(itemId);
     if (itemPrototype)
     {
@@ -366,7 +367,7 @@ bool QuestUpdateAddItemAction::Execute(Event event)
             placeholders["%quest_obj_required"] = std::to_string(requiredItemsCount);
             if (botAI->HasStrategy("debug quest", BotState::BOT_STATE_COMBAT) || botAI->HasStrategy("debug quest", BotState::BOT_STATE_NON_COMBAT))
             {
-                const auto text = BOT_TEXT2("%quest_link - %item_link %quest_obj_available/%quest_obj_required", placeholders);
+                const auto text = PlayerbotTextMgr::instance().GetBotText("%quest_link - %item_link %quest_obj_available/%quest_obj_required", placeholders);
                 botAI->Say(text);
                 LOG_INFO("playerbots", "{} => {}", bot->GetName(), text);
             }
@@ -405,8 +406,6 @@ bool QuestItemPushResultAction::Execute(Event event)
         if (!quest)
             return false;
 
-        const QuestStatusData& q_status = bot->getQuestStatusMap().at(questId);
-
         for (int i = 0; i < QUEST_ITEM_OBJECTIVES_COUNT; i++)
         {
             uint32 itemId = quest->RequiredItemId[i];
@@ -432,7 +431,7 @@ bool QuestItemPushResultAction::Execute(Event event)
     return false;
 }
 
-bool QuestUpdateFailedAction::Execute(Event event)
+bool QuestUpdateFailedAction::Execute(Event /*event*/)
 {
     //opcode SMSG_QUESTUPDATE_FAILED is never sent...(yet?)
     return false;
@@ -446,15 +445,13 @@ bool QuestUpdateFailedTimerAction::Execute(Event event)
     uint32 questId;
     p >> questId;
 
-    Player* requester = event.getOwner() ? event.getOwner() : GetMaster();
-
     Quest const* qInfo = sObjectMgr->GetQuestTemplate(questId);
 
     if (qInfo)
     {
         std::map<std::string, std::string> placeholders;
         placeholders["%quest_link"] = botAI->GetChatHelper()->FormatQuest(qInfo);
-        botAI->TellMaster(BOT_TEXT2("Failed timer for %quest_link, abandoning", placeholders));
+        botAI->TellMaster(PlayerbotTextMgr::instance().GetBotText("Failed timer for %quest_link, abandoning", placeholders));
         BroadcastHelper::BroadcastQuestUpdateFailedTimer(botAI, bot, qInfo);
     }
     else

@@ -10,6 +10,7 @@
 #include "MageActions.h"
 #include "Playerbots.h"
 #include "PriestActions.h"
+#include "RaidBossHelpers.h"
 #include "ReachTargetActions.h"
 #include "RogueActions.h"
 #include "ShamanActions.h"
@@ -79,6 +80,19 @@ float AttumenTheHuntsmanWaitForDpsMultiplier::GetValue(Action* action)
     return 1.0f;
 }
 
+// Disables co +disperse and co +tank face
+float MaidenOfVirtueDisableCombatFormationMoveMultiplier::GetValue(Action* action)
+{
+    if (!AI_VALUE2(Unit*, "find target", "maiden of virtue"))
+        return 1.0f;
+
+    if (dynamic_cast<CombatFormationMoveAction*>(action) &&
+        !dynamic_cast<SetBehindTargetAction*>(action))
+        return 0.0f;
+
+    return 1.0f;
+}
+
 // The assist tank should stay on the boss to be 2nd on aggro and tank Hateful Bolts
 float TheCuratorDisableTankAssistMultiplier::GetValue(Action* action)
 {
@@ -87,6 +101,19 @@ float TheCuratorDisableTankAssistMultiplier::GetValue(Action* action)
         return 1.0f;
 
     if (bot->GetVictim() != nullptr && dynamic_cast<TankAssistAction*>(action))
+        return 0.0f;
+
+    return 1.0f;
+}
+
+// Disables co +disperse and co +tank face
+float TheCuratorDisableCombatFormationMoveMultiplier::GetValue(Action* action)
+{
+    if (!AI_VALUE2(Unit*, "find target", "the curator"))
+        return 1.0f;
+
+    if (dynamic_cast<CombatFormationMoveAction*>(action) &&
+        !dynamic_cast<SetBehindTargetAction*>(action))
         return 0.0f;
 
     return 1.0f;
@@ -242,6 +269,9 @@ float PrinceMalchezaarEnfeebleKeepDistanceMultiplier::GetValue(Action* action)
 
     if (bot->HasAura(SPELL_ENFEEBLE))
     {
+        if (dynamic_cast<CastReachTargetSpellAction*>(action))
+            return 0.0f;
+
         if (dynamic_cast<MovementAction*>(action) &&
             !dynamic_cast<PrinceMalchezaarEnfeebledAvoidHazardAction*>(action))
             return 0.0f;
@@ -346,17 +376,11 @@ float NightbaneDisableMovementMultiplier::GetValue(Action* action)
 
     if (dynamic_cast<CastBlinkBackAction*>(action) ||
         dynamic_cast<CastDisengageAction*>(action) ||
-        dynamic_cast<FleeAction*>(action))
-        return 0.0f;
-
-    // Disable CombatFormationMoveAction for all bots except:
-    // (1) main tank and (2) only during the ground phase, other melee
-    if (botAI->IsRanged(bot) ||
-        (botAI->IsMelee(bot) && !botAI->IsMainTank(bot) &&
-         nightbane->GetPositionZ() > NIGHTBANE_FLIGHT_Z))
+        dynamic_cast<FleeAction*>(action) ||
+        (dynamic_cast<CombatFormationMoveAction*>(action) &&
+         !dynamic_cast<SetBehindTargetAction*>(action)))
     {
-        if (dynamic_cast<CombatFormationMoveAction*>(action))
-            return 0.0f;
+        return 0.0f;
     }
 
     return 1.0f;
