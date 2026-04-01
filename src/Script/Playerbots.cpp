@@ -115,7 +115,7 @@ public:
                 std::string maxAllowedBotCount = std::to_string(sRandomPlayerbotMgr.GetMaxAllowedBotCount());
 
                 ChatHandler(player->GetSession()).SendSysMessage(
-                    "|cff00ff00Playerbots:|r The server is configured with " + maxAllowedBotCount + " bots.");
+                    "|cff00ff00GWServer:|r The server is configured with " + maxAllowedBotCount + " bots.");
             }
         }
     }
