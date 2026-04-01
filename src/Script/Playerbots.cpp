@@ -119,8 +119,7 @@ public:
                 roundedTime = roundedTime.substr(0, roundedTime.find('.') + 2);
 
                 ChatHandler(player->GetSession()).SendSysMessage(
-                    "|cff00ff00GWServer:|r modules initialization at server startup takes about '"
-                    + roundedTime + "' minutes.");
+                    "|cff00ff00Playerbots:|r The server is configured with " + maxAllowedBotCount + " bots.");
             }
         }
     }
