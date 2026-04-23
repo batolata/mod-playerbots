@@ -106,7 +106,7 @@ public:
             if (sPlayerbotAIConfig.enabled)
             {
                 ChatHandler(player->GetSession()).SendSysMessage(
-                    "|cff00ff00This is a Progressive Server by |cff00ccffDecrypteD|r|cff00ff00This is a Progressive Server by |cff00ccffDecrypteD|r "
+                    "|cff00ff00This is a Progressive Server by |cff00ccffDecrypteD|r "
                     "|cffcccccchttps://github.com/batolata|r");
             }
 
