@@ -2020,7 +2020,7 @@ AiPlayerbot.RandomClassSpecIndex.11.3 = 3
 #                                                                           Unix/Linux)
 #        Default:     "127.0.0.1;3306;acore;acore;acore_playerbots"       - (PlayerbotDatabaseInfo)
 
-PlayerbotsDatabaseInfo = "127.0.0.1;3306;acore;acore;acore_playerbots"
+PlayerbotsDatabaseInfo = "127.0.0.1;3306;acore;tralala12;acore_playerbots"
 
 #
 #    PlayerbotsDatabase.WorkerThreads
