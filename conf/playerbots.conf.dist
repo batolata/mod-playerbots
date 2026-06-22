@@ -102,7 +102,7 @@ AiPlayerbot.AddClassAccountPoolSize = 50
 
 # Prefix for created bot accounts (of any type).
 # Do not change this prefix while there are existing bot accounts.
-AiPlayerbot.RandomBotAccountPrefix = "rndbot"
+AiPlayerbot.RandomBotAccountPrefix = "SLC"
 
 # Delete all randombot accounts
 # To apply this, set the number to 1 and run the Worldserver. Once deletion is complete, if you would
