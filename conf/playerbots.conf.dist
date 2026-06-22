@@ -680,9 +680,6 @@ AiPlayerbot.EndFishingWithMaster = 30.0
 # Enable/Disable randomly generated password for randombot accounts
 AiPlayerbot.RandomBotRandomPassword = 0
 
-# Prefix for account names to create for randombots
-AiPlayerbot.RandomBotAccountPrefix = "GWO"
-
 # Minimum and maximum levels for randombots
 AiPlayerbot.RandomBotMinLevel = 1
 AiPlayerbot.RandomBotMaxLevel = 80
